@@ -2,7 +2,6 @@ package gottp
 
 import (
 	"bytes"
-	"gottp/conf"
 	"log"
 	"net/http"
 	"runtime"
@@ -59,8 +58,8 @@ func sendException(err interface{}, stack, buffer string) {
 	connection.SenderName += " Exception"
 
 	go connection.SendEmail(Message{
-		conf.Settings.EmailFrom,
-		conf.Settings.ErrorTo,
+		Settings.EmailFrom,
+		Settings.ErrorTo,
 		exc_message,
 		ErrorTemplate(stack, buffer),
 	})

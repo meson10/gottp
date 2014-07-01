@@ -1,7 +1,6 @@
 package gottp
 
 import (
-	"gottp/conf"
 	"log"
 	"net/smtp"
 	"strings"
@@ -41,7 +40,7 @@ func (conn *MailConn) MessageBytes(message Message) []byte {
 }
 
 func (conn *MailConn) SendEmail(message Message) {
-	if conf.Settings.EmailDummy == true {
+	if Settings.EmailDummy == true {
 		log.Println("Not sending email as dummy set to true")
 		return
 	}
@@ -59,12 +58,12 @@ func (conn *MailConn) SendEmail(message Message) {
 
 func MakeConn() *MailConn {
 	mailconn := &MailConn{
-		conf.Settings.EmailHost,
-		conf.Settings.EmailUsername,
-		conf.Settings.EmailPassword,
-		conf.Settings.EmailSender,
-		conf.Settings.EmailPort,
-		conf.Settings.EmailHost + ":" + conf.Settings.EmailPort,
+		Settings.EmailHost,
+		Settings.EmailUsername,
+		Settings.EmailPassword,
+		Settings.EmailSender,
+		Settings.EmailPort,
+		Settings.EmailHost + ":" + Settings.EmailPort,
 	}
 	return mailconn
 }

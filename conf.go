@@ -1,4 +1,4 @@
-package conf
+package gottp
 
 type SettingsMap struct {
 	EmailHost     string
