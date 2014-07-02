@@ -12,8 +12,8 @@ type SettingsMap struct {
 	Listen        string
 }
 
-const BaseConfig = `;Sample Configuration File
+const baseConfig = `;Sample Configuration File
 [gottp]
-listen=""`
+listen="127.0.0.1:8005";`
 
 var Settings SettingsMap
