@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print" />
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Gottp by Simversity</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Gottp</h1>
+          <h2>A tiny golang web framework</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/Simversity/gottp/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/Simversity/gottp/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/Simversity/gottp" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a name="gottp" class="anchor" href="#gottp"><span class="octicon octicon-link"></span></a>gottp</h1>
+
+<p>A tiny golang web framework</p>
+
+<h1>
+<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<pre><code>go get github.com/Simversity/gottp
+</code></pre>
+
+<h1>
+<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h1>
+
+<p><em>A sample application named helloWorld is available inside the tests directory of your checkout</em></p>
+
+<p>To start building a web service using gottp just create a new project with the following structure.</p>
+
+<ul>
+<li>conf.go -&gt; Configuration</li>
+<li>main.go -&gt; main Server engine</li>
+<li>urls.go -&gt; Register acceptable urls &amp; handlers.</li>
+<li>handlers/hello.go -&gt; Register handlers that process the request.</li>
+</ul><h2>
+<a name="confgo" class="anchor" href="#confgo"><span class="octicon octicon-link"></span></a>conf.go</h2>
+
+<p>A minimalist configuration looks like:</p>
+
+<pre><code>package main
+
+import "github.com/Simversity/gottp"
+
+type config struct {
+    Gottp gottp.SettingsMap
+}
+
+func (self *config) MakeConfig(configPath string) {
+    gottp.Settings = self.Gottp
+}
+
+var settings config
+</code></pre>
+
+<h2>
+<a name="maingo" class="anchor" href="#maingo"><span class="octicon octicon-link"></span></a>main.go</h2>
+
+<p>A sample main.go would look like:</p>
+
+<pre><code>package main
+
+import (
+    "log"
+    "github.com/Simversity/gottp"
+)
+
+func sysInit() {
+    &lt;-(gottp.SysInitChan) //Buffered Channel to receive the server upstart boolean
+    log.Println("System is ready to Serve")
+}
+
+func main() {
+    go sysInit()
+    gottp.BindHandlers(urls) //Urls is a slice of all the registered urls.
+    gottp.MakeServer(&amp;settings)
+}
+</code></pre>
+
+<h2>
+<a name="urlsgo" class="anchor" href="#urlsgo"><span class="octicon octicon-link"></span></a>urls.go</h2>
+
+<p>Urls are of type gottp.Url</p>
+
+<pre><code>type Url struct {
+    name    string //shortname of the url
+    url     string //provided regular pattern
+    handler func(r *Request) //ReuqestHandler 
+    pattern *regexp.Regexp //Compiled Regular Expression
+}
+</code></pre>
+
+<p>A sample urls.go looks like:</p>
+
+<pre><code>package main
+
+import (
+    "github.com/Simversity/gottp"
+)
+
+var urls = []*gottp.Url{
+    gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", handlers.HelloMessage),
+}
+</code></pre>
+
+<p>This would match all urls that are like "/hello/world" or "/hello/greet"</p>
+
+<h2>
+<a name="handlersgo" class="anchor" href="#handlersgo"><span class="octicon octicon-link"></span></a>handlers.go</h2>
+
+<p>A sample handler looks like:</p>
+
+<pre><code>package handlers
+
+import (
+    "github.com/Simversity/gottp"
+)
+
+func HelloMessage(req *gottp.Request) {
+    req.Write("hello world")
+}
+</code></pre>
+
+<h2>
+<a name="build--run" class="anchor" href="#build--run"><span class="octicon octicon-link"></span></a>Build &amp; Run</h2>
+
+<pre><code>go install test &amp;&amp; test
+</code></pre>
+
+<p>Point your browser to <a href="http://127.0.0.1:8005/hello/check">http://127.0.0.1:8005/hello/check</a></p>
+
+<p>Should give you a JSON output:</p>
+
+<pre><code>{
+    "data": "hello world",
+    "message": "",
+    "status": 200
+}
+</code></pre>
+
+<h1>
+<a name="available-urls" class="anchor" href="#available-urls"><span class="octicon octicon-link"></span></a>Available URLs</h1>
+
+<p>You can visit <a href="http://127.0.0.1:8005/urls">http://127.0.0.1:8005/urls</a> to access the URLs exposed by your application.</p>
+
+<p>Sample Output:</p>
+
+<pre><code>{
+    "data": {
+        "hello": "/hello/\\w{3,5}/?$"
+    },
+    "message": "",
+    "status": 200
+}
+</code></pre>
+
+<h1>
+<a name="command-line-options--cfg-files" class="anchor" href="#command-line-options--cfg-files"><span class="octicon octicon-link"></span></a>Command Line Options &amp; CFG files</h1>
+
+<p>To be documented</p>
+
+<h1>
+<a name="pipes--async-pipes" class="anchor" href="#pipes--async-pipes"><span class="octicon octicon-link"></span></a>Pipes &amp; Async Pipes</h1>
+
+<p>To be documented</p>
+
+<h1>
+<a name="error-reporting" class="anchor" href="#error-reporting"><span class="octicon octicon-link"></span></a>Error Reporting</h1>
+
+<p>To be documented</p>
+
+<h1>
+<a name="accessing-request-arguments" class="anchor" href="#accessing-request-arguments"><span class="octicon octicon-link"></span></a>Accessing Request Arguments</h1>
+
+<p>To be documented</p>
+
+<p>... Working on Documentation ...</p>
+        </section>
+
+        <footer>
+          Gottp is maintained by <a href="https://github.com/Simversity">Simversity</a><br>
+          This page was generated by <a href="http://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+                  <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+          </script>
+          <script type="text/javascript">
+            try {
+              var pageTracker = _gat._getTracker("UA-51523362-1");
+            pageTracker._trackPageview();
+            } catch(err) {}
+          </script>
+
+      </div>
+    </div>
+  </body>
+</html>
