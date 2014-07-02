@@ -8,7 +8,8 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"utils"
+
+	utils "github.com/Simversity/gottp/utils"
 )
 
 const ERROR = "An Internal Error has occured while processing this Request." +

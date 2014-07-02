@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"utils"
 	//"compress/gzip"
+	utils "github.com/Simversity/gottp/utils"
 )
 
 //*http.Request, rw ResponseWriter
@@ -184,12 +184,6 @@ func (r *Request) Write(data interface{}) {
 	if r.PipeOutput != nil {
 		(*r.PipeOutput)[r.PipeIndex] = piped
 	} else if strings.Contains(r.Request.Header.Get("Accept-Encoding"), "gzip") {
-		/*
-			r.Writer.Header().Set("Content-Encoding", "gzip")
-			gz := gzip.NewWriter(r.Writer)
-			defer gz.Close()
-			gz.Write(byte_data)
-		*/
 		r.Writer.Write(utils.Encoder(piped))
 	} else {
 		r.Writer.Write(utils.Encoder(piped))
