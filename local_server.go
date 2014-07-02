@@ -11,6 +11,8 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+
+	utils "github.com/Simversity/gottp/utils"
 )
 
 func cleanAddr(addr string) {
@@ -38,7 +40,7 @@ func interrupt_cleanup(addr string) {
 	os.Exit(0)
 }
 
-func FlagArgs(cfg Configurer) map[string]*string {
+func FlagArgs(cfg utils.Configurer) map[string]*string {
 	args := map[string]*string{}
 
 	unixSocketptr := flag.String("UNIX_SOCKET", "", "Use Unix Socket, default is None")
@@ -50,32 +52,31 @@ func FlagArgs(cfg Configurer) map[string]*string {
 	//Must be called after all flags are defined and before flags are accessed by the program.
 	flag.Parse()
 
+	utils.ReadConfig(baseConfig, cfg)
 	cfg.MakeConfig(*args["config"])
 
 	return args
 }
 
-type Configurer interface {
-	MakeConfig(string)
-	GetAddr() string
-}
-
 var SysInitChan = make(chan bool, 1)
 
-func MakeServer(cfg Configurer) {
+func MakeServer(cfg utils.Configurer) {
 	var addr string
 	ret := FlagArgs(cfg)
 
 	if *ret["unix_socket"] != "" {
 		addr = *ret["unix_socket"]
 	} else {
-		addr = cfg.GetAddr()
+		addr = Settings.Listen
 	}
 
 	SysInitChan <- true
 
 	var serverError error
-	log.Println("Listening on " + addr)
+	if addr != "" {
+		log.Println("Listening on " + addr)
+	}
+
 	if strings.Index(addr, "/") == 0 {
 		listener, err := net.Listen("unix", addr)
 		if err != nil {
