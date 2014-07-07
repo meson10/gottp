@@ -1,7 +1,8 @@
 gottp
 =====
 
-A tiny golang web framework
+Gottp is not a regular front-end server to do customer facing websites. It has been designed using backend servers in mind. It offers a variety of features like Call Aggregation using Asynchronous or Blocking Pipes very much like Batch requests in Graph API. https://developers.facebook.com/docs/graph-api/making-multiple-requests
+
 
 Installation
 =============
