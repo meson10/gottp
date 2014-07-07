@@ -88,10 +88,10 @@ func Exception(req *Request) {
 		defer sendException(err, requestStack(req), buffer)
 
 		if is_json {
-			e := HttpError{500, ERROR}
+			e := HttpError{500, err.(string)}
 			req.Raise(e)
 		} else {
-			http.Error(req.Writer, ERROR, 500)
+			http.Error(req.Writer, err.(string), 500)
 		}
 	}
 }
