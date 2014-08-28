@@ -97,6 +97,7 @@ func MakeServer(cfg utils.Configurer) {
 		}
 
 		go interrupt_cleanup(addr)
+		os.Chmod(addr, 0770)
 		serverError = http.Serve(listener, nil)
 	} else {
 		serverError = http.ListenAndServe(addr, nil)
