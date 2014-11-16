@@ -4,7 +4,7 @@ go:
   - tip
 
 before_install:
-  - code.google.com/p/gcfg
+  - go get code.google.com/p/gcfg
 
 script:
   - go build -v ./...
