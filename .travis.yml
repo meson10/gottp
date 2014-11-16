@@ -1,0 +1,10 @@
+language: go
+
+go:
+  - tip
+
+before_install:
+  - code.google.com/p/gcfg
+
+script:
+  - go build -v ./...
