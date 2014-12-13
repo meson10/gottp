@@ -3,7 +3,6 @@
 package gottp
 
 import (
-	"flag"
 	"log"
 	"net"
 	"net/http"
@@ -12,7 +11,7 @@ import (
 	"strings"
 	"syscall"
 
-	utils "github.com/Simversity/gottp/utils"
+	conf "github.com/Simversity/gottp/conf"
 )
 
 func cleanAddr(addr string) {
@@ -40,35 +39,39 @@ func interrupt_cleanup(addr string) {
 	os.Exit(0)
 }
 
-func FlagArgs(cfg utils.Configurer) map[string]*string {
-	args := map[string]*string{}
-
-	unixSocketptr := flag.String("UNIX_SOCKET", "", "Use Unix Socket, default is None")
-	args["unix_socket"] = unixSocketptr
-
-	configPtr := flag.String("config", "", "Config [.ini format] file to Load the configurations from")
-	args["config"] = configPtr
-
-	//Must be called after all flags are defined and before flags are accessed by the program.
-	flag.Parse()
-
-	utils.ReadConfig(baseConfig, cfg)
-	cfg.MakeConfig(*args["config"])
-
-	return args
-}
-
 var SysInitChan = make(chan bool, 1)
 
-func MakeServer(cfg utils.Configurer) {
-	var addr string
-	ret := FlagArgs(cfg)
+var settings conf.Config
 
-	if *ret["unix_socket"] != "" {
-		addr = *ret["unix_socket"]
-	} else {
-		addr = Settings.Listen
+func parseCLI() {
+	cfgPath, unixAddr := conf.CliArgs()
+	settings.MakeConfig(cfgPath)
+
+	if unixAddr != "" {
+		settings.Gottp.Listen = unixAddr
 	}
+}
+
+func MakeServer(cfg conf.Configurer) {
+	cfgPath, unixAddr := conf.CliArgs()
+	cfg.MakeConfig(cfgPath)
+
+	settings.Gottp = *cfg.GetGottpConfig()
+
+	if unixAddr != "" {
+		settings.Gottp.Listen = unixAddr
+	}
+
+	makeServer()
+}
+
+func DefaultServer() {
+	parseCLI()
+	makeServer()
+}
+
+func makeServer() {
+	addr := settings.Gottp.Listen
 
 	SysInitChan <- true
 

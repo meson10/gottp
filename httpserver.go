@@ -59,8 +59,8 @@ func sendException(err interface{}, stack, buffer string) {
 	connection.SenderName += " Exception"
 
 	go connection.SendEmail(Message{
-		Settings.EmailFrom,
-		Settings.ErrorTo,
+		settings.Gottp.EmailFrom,
+		settings.Gottp.ErrorTo,
 		exc_message,
 		ErrorTemplate(stack, buffer),
 	})
