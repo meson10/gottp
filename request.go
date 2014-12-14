@@ -62,7 +62,7 @@ func (e HttpError) SendOverWire() utils.Q {
 	}
 
 	if len(e.Message) == 0 {
-		e.Message = "An Internal exception has occured. Please try again after some time"
+		e.Message = ERROR
 	}
 
 	return utils.Q{
