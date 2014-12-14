@@ -17,11 +17,6 @@ type WireSender interface {
 	SendOverWire() utils.Q
 }
 
-type HttpError struct {
-	Status  int
-	Message string
-}
-
 type Paginator struct {
 	Skip  int
 	Limit int
@@ -54,22 +49,6 @@ func makeString(val interface{}) (ret string) {
 		ret = strconv.Itoa(val)
 	}
 	return
-}
-
-func (e HttpError) SendOverWire() utils.Q {
-	if e.Status == 0 {
-		e.Status = 500
-	}
-
-	if len(e.Message) == 0 {
-		e.Message = ERROR
-	}
-
-	return utils.Q{
-		"data":    nil,
-		"status":  e.Status,
-		"message": e.Message,
-	}
 }
 
 type Request struct {
