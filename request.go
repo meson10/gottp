@@ -55,7 +55,7 @@ type Request struct {
 	Request    *http.Request
 	Writer     http.ResponseWriter
 	UrlArgs    *map[string]string
-	PipeOutput *[]utils.Q
+	PipeOutput chan<- *utils.Q
 	PipeIndex  int
 	params     *utils.Q
 }
@@ -161,7 +161,8 @@ func (r *Request) Write(data interface{}) {
 	}
 
 	if r.PipeOutput != nil {
-		(*r.PipeOutput)[r.PipeIndex] = piped
+		piped["index"] = r.PipeIndex
+		r.PipeOutput <- &piped
 	} else if strings.Contains(r.Request.Header.Get("Accept-Encoding"), "gzip") {
 		r.Writer.Write(utils.Encoder(piped))
 	} else {
@@ -170,5 +171,11 @@ func (r *Request) Write(data interface{}) {
 }
 
 func (r *Request) Raise(e HttpError) {
-	r.Write(e)
+	if r.PipeOutput != nil {
+		piped := e.SendOverWire()
+		piped["index"] = r.PipeIndex
+		r.PipeOutput <- &piped
+	} else {
+		r.Write(e)
+	}
 }

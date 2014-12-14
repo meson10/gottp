@@ -66,33 +66,56 @@ func performPipe(w http.ResponseWriter, req *http.Request, urls []*Url, async bo
 	var calls []eachCall
 	parentReq.ConvertArgument("stack", &calls)
 
-	po := make([]utils.Q, len(calls))
+	done := make(chan bool)
+	output := make([]*utils.Q, len(calls))
+	po := make(chan *utils.Q, len(calls))
 
 	var wg sync.WaitGroup
+
+	go func(sink <-chan *utils.Q) {
+		for {
+			v, more := <-sink
+			if more {
+				if index, ok := (*v)["index"].(int); ok {
+					output[index] = v
+				}
+			} else {
+				done <- true
+				return
+			}
+		}
+
+	}(po)
+
 	for index, oneCall := range calls {
 		oneCall.Host = req.Host
 		pipeUrls = append(pipeUrls, oneCall.Url)
-		pipeReq := Request{PipeOutput: &po, PipeIndex: index}
+		pipeReq := Request{PipeOutput: po, PipeIndex: index}
+
+		wg.Add(1)
 
 		if async {
-			wg.Add(1)
 			go func(call eachCall) {
-				defer Exception(&parentReq)
+				defer Exception(&pipeReq)
 				defer wg.Done()
 				eachPipe(&pipeReq, call, urls)
 			}(oneCall)
 		} else {
-			eachPipe(&pipeReq, oneCall, urls)
+			func(call eachCall) {
+				defer Exception(&pipeReq)
+				defer wg.Done()
+				eachPipe(&pipeReq, call, urls)
+			}(oneCall)
 		}
 	}
 
 	defer pipeTimeTrack(time.Now(), req, strings.Join(pipeUrls, ", "))
 
-	if async {
-		wg.Wait()
-	}
+	wg.Wait()
+	close(po)
 
-	parentReq.Write(po)
+	<-done
+	parentReq.Write(output)
 }
 
 func pipeTimeTrack(start time.Time, req *http.Request, pipeUrls string) {
