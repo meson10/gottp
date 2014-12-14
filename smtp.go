@@ -40,7 +40,7 @@ func (conn *MailConn) MessageBytes(message Message) []byte {
 }
 
 func (conn *MailConn) SendEmail(message Message) {
-	if Settings.EmailDummy == true {
+	if settings.Gottp.EmailDummy == true {
 		log.Println("Not sending email as dummy set to true")
 		return
 	}
@@ -58,12 +58,12 @@ func (conn *MailConn) SendEmail(message Message) {
 
 func MakeConn() *MailConn {
 	mailconn := &MailConn{
-		Settings.EmailHost,
-		Settings.EmailUsername,
-		Settings.EmailPassword,
-		Settings.EmailSender,
-		Settings.EmailPort,
-		Settings.EmailHost + ":" + Settings.EmailPort,
+		settings.Gottp.EmailHost,
+		settings.Gottp.EmailUsername,
+		settings.Gottp.EmailPassword,
+		settings.Gottp.EmailSender,
+		settings.Gottp.EmailPort,
+		settings.Gottp.EmailHost + ":" + settings.Gottp.EmailPort,
 	}
 	return mailconn
 }

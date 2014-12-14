@@ -1,4 +1,4 @@
-package utils
+package conf
 
 import (
 	"log"
@@ -9,6 +9,7 @@ import (
 
 type Configurer interface {
 	MakeConfig(string)
+	GetGottpConfig() *GottpSettings
 }
 
 func ReadConfig(configString string, cfg Configurer) error {
