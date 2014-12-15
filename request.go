@@ -150,6 +150,7 @@ func (r *Request) ConvertArgument(key string, f interface{}) {
 
 func (r *Request) Write(data interface{}) {
 	var piped utils.Q
+	r.Writer.Header().Set("Server", serverUA)
 	if v, ok := data.(WireSender); ok {
 		piped = v.SendOverWire()
 	} else {

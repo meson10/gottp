@@ -11,6 +11,7 @@ import (
 	utils "github.com/Simversity/gottp/utils"
 )
 
+const serverUA = "Gottp Server"
 const ERROR = `Oops! An Internal Error occured while performing that action.
 Please try again later`
 
