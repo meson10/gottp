@@ -152,7 +152,7 @@ func (r *Request) ConvertArgument(key string, f interface{}) {
 
 func (r *Request) Write(data interface{}) {
 	var piped utils.Q
-	r.Writer.Header().Set("Server", serverUA)
+
 	if v, ok := data.(WireSender); ok {
 		piped = v.SendOverWire()
 	} else {
@@ -169,6 +169,7 @@ func (r *Request) Write(data interface{}) {
 	} else if strings.Contains(
 		r.Request.Header.Get("Accept-Encoding"), "deflate",
 	) {
+		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Header().Set("Content-Encoding", "deflate")
 		gz := zlib.NewWriter(r.Writer)
 		defer gz.Close()
@@ -177,12 +178,14 @@ func (r *Request) Write(data interface{}) {
 	} else if strings.Contains(
 		r.Request.Header.Get("Accept-Encoding"), "gzip",
 	) {
+		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Header().Set("Content-Encoding", "gzip")
 		gz := gzip.NewWriter(r.Writer)
 		defer gz.Close()
 		gz.Write(utils.Encoder(piped))
 
 	} else {
+		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Write(utils.Encoder(piped))
 	}
 }
