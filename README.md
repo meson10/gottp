@@ -3,11 +3,20 @@
 gottp
 =====
 
-Gottp is not a regular front-end server to do customer facing websites. It has been designed using backend servers in mind. It offers a variety of features like Call Aggregation using Asynchronous or Blocking Pipes very much like Batch requests in Graph API. https://developers.facebook.com/docs/graph-api/making-multiple-requests
+Gottp is not a regular front-end server to do user-facing CSS powered websites. It was designed using backend servers in mind and offers a variety of features like:
+
+* Call Aggregation using Non-Blocking or Blocking Pipes. [1]
+* Optionally Listens on Unix Domain socket.
+* In-built error traceback emails.
+
+[1] Much like Batch requests in Facebook Graph API (https://developers.facebook.com/docs/graph-api/making-multiple-requests)
 
 
 Installation
 =============
+
+Installation is as easy as:
+
 ```
 go get github.com/Simversity/gottp
 ```
@@ -21,29 +30,96 @@ To start building a web service using gottp just create a new project with the f
 
   * conf.go -> Configuration
   * main.go -> main Server engine
-  * urls.go -> Register acceptable urls & handlers.
-  * handlers/hello.go -> Register handlers that process the request.
+  * urls.go -> Register urls & corresponding handlers.
+  * handlers.go -> handlers processing the request.
 
+
+Configuration
+-------------
+
+Gottp allows you to provide .cfg files via the command line which is as easy as ./binary -config=path_to_cfg
+
+Default gottp settings is a struct called GottpSettings
+
+```
+type GottpSettings struct {
+	EmailHost     string //SMTP Host to send server Tracebacks.
+	EmailPort     string //SMTP Port
+	EmailUsername string //Username or Password to connect with SMTP
+	EmailPassword string
+	EmailSender   string   //Sender Name to be used for traceback.
+	EmailFrom     string   //Verified sender email address like errors@example.com
+	ErrorTo       []string //List of recipients for tracebacks.
+	EmailDummy    bool     //Set to True, if Tracebacks should not be sent.
+	Listen        string   //Address to Listen on default: 127.0.0.1:8005
+}
+```
 
 conf.go
 -------
 
-A minimalist configuration looks like:
+This section is applicable only when you need to provide application based settings alongside those used by gottp.
+
+Configuration must implement the Configurer interface.
+
+Configurer requires two method Sets:
+
+* MakeConfig(string) which accepts the path of the .cfg file provided as an command line argument.
+* GetGottpConfig() which must return the Settings 
 
 ```
-package main
+type Configurer interface {
+	MakeConfig(string)
+	GetGottpConfig() *GottpSettings
+}
+```
 
-import "github.com/Simversity/gottp"
+A minimalist extended configuration looks like:
+
+```
+import (
+	"github.com/Simversity/gottp/conf"
+)
 
 type config struct {
-	Gottp gottp.SettingsMap
+    Custom struct {
+        VarOne string
+        VarTwo string
+    }
+	Gottp conf.GottpSettings
 }
 
 func (self *config) MakeConfig(configPath string) {
-	gottp.Settings = self.Gottp
+	if configPath != "" {
+		conf.MakeConfig(configPath, self)
+	}
+}
+
+func (self *config) GetGottpConfig() *conf.GottpSettings {
+	return &self.Gottp
 }
 
 var settings config
+```
+
+
+You can provide a simple configuration file in .cfg format to load the settings which would look like this:
+
+```
+[custom]
+VarOne="one"
+VarTwo="two"
+
+[gottp]
+listen="/tmp/custom.sock"
+EmailHost="email-smtp.us-east-1.amazonaws.com"
+EmailPort="587"
+EmailPassword="TDVAGCWCTCTWCTCQ&&*!!*!*!*/NeURB5"
+EmailUsername="HelloWorldSample"
+EmailSender="My Gottp Server"
+EmailFrom="errors@example.com"
+ErrorTo="dev@example.com"
+EmailDummy=false
 ```
 
 main.go
@@ -80,7 +156,7 @@ Urls are of type gottp.Url
 type Url struct {
 	name    string //shortname of the url
 	url     string //provided regular pattern
-	handler func(r *Request) //ReuqestHandler 
+	handler func(r *Request) //ReuqestHandler
 	pattern *regexp.Regexp //Compiled Regular Expression
 }
 ```
