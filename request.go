@@ -57,8 +57,8 @@ type Request struct {
 	Request    *http.Request
 	Writer     http.ResponseWriter
 	UrlArgs    *map[string]string
-	PipeOutput chan<- *utils.Q
-	PipeIndex  int
+	pipeOutput chan<- *utils.Q
+	pipeIndex  int
 	params     *utils.Q
 }
 
@@ -163,9 +163,9 @@ func (r *Request) Write(data interface{}) {
 		}
 	}
 
-	if r.PipeOutput != nil {
-		piped["index"] = r.PipeIndex
-		r.PipeOutput <- &piped
+	if r.pipeOutput != nil {
+		piped["index"] = r.pipeIndex
+		r.pipeOutput <- &piped
 	} else if strings.Contains(
 		r.Request.Header.Get("Accept-Encoding"), "deflate",
 	) {
@@ -191,10 +191,10 @@ func (r *Request) Write(data interface{}) {
 }
 
 func (r *Request) Raise(e HttpError) {
-	if r.PipeOutput != nil {
+	if r.pipeOutput != nil {
 		piped := e.SendOverWire()
-		piped["index"] = r.PipeIndex
-		r.PipeOutput <- &piped
+		piped["index"] = r.pipeIndex
+		r.pipeOutput <- &piped
 	} else {
 		r.Write(e)
 	}

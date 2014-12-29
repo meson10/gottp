@@ -91,7 +91,7 @@ func performPipe(w http.ResponseWriter, req *http.Request, urls []*Url, async bo
 	for index, oneCall := range calls {
 		oneCall.Host = req.Host
 		pipeUrls = append(pipeUrls, oneCall.Url)
-		pipeReq := Request{PipeOutput: po, PipeIndex: index}
+		pipeReq := Request{pipeOutput: po, pipeIndex: index}
 
 		wg.Add(1)
 
