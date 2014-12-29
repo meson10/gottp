@@ -10,6 +10,7 @@ Gottp is not a regular front-end server to do user-facing CSS powered websites. 
 * In-built error traceback emails.
 * Optional data compression using zlib/gzip.
 * Pagination support.
+* Automatic listing of all exposed URLs
 
 [1] Much like Batch requests in Facebook Graph API (https://developers.facebook.com/docs/graph-api/making-multiple-requests)
 
@@ -270,7 +271,9 @@ log.Println(getArgs.abc)
 Available URLs
 ==============
 
-You can visit http://{host}:{port}/urls to access the URLs exposed by your application.
+With backends powered by Gottp, consumers can simply access http://{host}:{port}/urls to fetch a json of all URLs exposed by the application. URLs are returned as a map of key: pattern where the key is the human-readable-identifier provided at the time of constructing URLS and the pattern is the URL regular expression pattern.
+
+This helps in preventing hard coding of endpoints where consumers can fetch the URLs at application start time and reconstruct URLs using the indentifiers.
 
 Sample Output:
 
@@ -283,10 +286,20 @@ Sample Output:
     "status": 200
 }
 ```
-Pipes & Async Pipes
-===================
 
-To be documented
+Pipes
+=====
+
+All gottp based servers allow clubbing of requests to be executed together. This is a very handy feature that is used for clubbing calls that need to processed one after the other. It can save the network handshaking costs as the handshake is only performed once and this does not effect server performance as all gottp requests are performed as goroutines.
+
+Example usage of such calls is:
+
+1. Create a Comment
+2. Mark the parent notification as read
+3. Send out notification to the parent autho
+4. Churn the new activity feed as per edge rank.
+
+Using Pipes, call 1, 2, 3 & 4 can be combined into a single request to the server.
 
 Error Reporting
 ===============
