@@ -301,6 +301,20 @@ Example usage of such calls is:
 
 Using Pipes, call 1, 2, 3 & 4 can be combined into a single request to the server.
 
+To submit a PIPE request issue a POST call on /pipe (available by default) and the request body should be a valid JSON dump of
+
+```
+{
+    "stack": [
+        {"url": "/url1", "method": "POST", "data": {"sample": "json"}},
+        {"url": "/url2", "method": "GET", "data": {"get": "argument"}},
+    ]
+}
+```
+
+The request would "sequentially" evaluate both the requests and return the data in the same order as requested.
+
+
 Error Reporting
 ===============
 
