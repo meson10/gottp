@@ -342,4 +342,10 @@ Requests submitted as PIPEs should again be a valid JSON dump of
 Error Reporting
 ===============
 
-To be documented
+Gottp can send error tracebacks if a request failed.
+This can be enabled by setting EmailDummy as false in the gottp section of cfg.
+
+A sample traceback email looks like this:
+
+
+TODO: Expose a way to use custom email templates.
