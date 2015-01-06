@@ -5,34 +5,14 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"time"
 
 	utils "github.com/Simversity/gottp/utils"
 )
 
-func make_tag(name string, value string) string {
-	return "<b>" + name + "</b>" + ": " + value
-}
+const layout = "Jan 2, 2006 at 3:04pm (MST)"
 
-func requestStack(req *Request) string {
-	var referrer string
-	if len(req.Request.Header["Referer"]) > 0 {
-		referrer = req.Request.Header["Referer"][0]
-	}
-
-	params := string(utils.Encoder(req.GetArguments()))
-
-	return strings.Join([]string{
-		make_tag("Host", req.Request.Host),
-		make_tag("Method", req.Request.Method),
-		make_tag("Protocol", req.Request.Proto),
-		make_tag("RemoteIP", req.Request.RemoteAddr),
-		make_tag("URI", req.Request.URL.Path),
-		make_tag("Referer", referrer),
-		make_tag("Arguments", params),
-	}, "<br/>")
-}
-
-func sendException(err interface{}, stack, buffer string) {
+func sendException(err interface{}, stack *ErrorStack) {
 	var exc_message string
 
 	switch err.(type) {
@@ -48,7 +28,8 @@ func sendException(err interface{}, stack, buffer string) {
 		}
 	}
 
-	log.Println(err, buffer)
+	log.Println(err, stack.Traceback)
+
 	connection := MakeConn()
 	connection.SenderName += " Exception"
 
@@ -56,20 +37,63 @@ func sendException(err interface{}, stack, buffer string) {
 		settings.Gottp.EmailFrom,
 		settings.Gottp.ErrorTo,
 		exc_message,
-		ErrorTemplate(stack, buffer),
+		ErrorTemplate(stack),
 	})
 
+}
+
+type ErrorStack struct {
+	Host      string
+	Method    string
+	Protocol  string
+	RemoteIP  string
+	URI       string
+	Referer   string
+	Arguments string
+	Traceback string
+	Timestamp string
+}
+
+func getStack(req *Request, traceback string) *ErrorStack {
+	if req == nil {
+		return &ErrorStack{
+			Traceback: traceback,
+			Timestamp: time.Now().Format(layout),
+		}
+	}
+
+	var referrer string
+	if len(req.Request.Header["Referer"]) > 0 {
+		referrer = req.Request.Header["Referer"][0]
+	}
+
+	params := string(utils.Encoder(req.GetArguments()))
+
+	return &ErrorStack{
+		Host:      req.Request.Host,
+		Method:    req.Request.Method,
+		Protocol:  req.Request.Proto,
+		RemoteIP:  req.Request.RemoteAddr,
+		URI:       req.Request.URL.Path,
+		Referer:   referrer,
+		Arguments: params,
+		Traceback: traceback,
+		Timestamp: time.Now().Format(layout),
+	}
 }
 
 func Exception(req *Request) {
 	if err := recover(); err != nil {
 		const size = 4096
+
 		buf := make([]byte, size)
 		buf = buf[:runtime.Stack(buf, false)]
-
 		buffer := string(buf)
+
+		stack := getStack(req, buffer)
+		defer sendException(err, stack)
+
 		if req == nil {
-			sendException(err, "Error was raised in a goroutine", buffer)
 			return
 		}
 
@@ -78,8 +102,6 @@ func Exception(req *Request) {
 		if len(contentType) > 0 && strings.Index(contentType[0], "json") > -1 {
 			is_json = true
 		}
-
-		defer sendException(err, requestStack(req), buffer)
 
 		if is_json {
 			e := HttpError{500, err.(string)}
