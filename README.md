@@ -241,51 +241,49 @@ GetArgument(key string) interface{}
 ConvertArguments(dest interface{})
 ConvertArgument(key string, dest interface{})
 
-    These methods come quite handy when you have to deal with the arguments. For a request with GET arguments that look like:
+These methods come quite handy when you have to deal with the arguments. For a request with GET arguments that look like:
 
-    ```
-    ?abc=world&param=1&check=0
-    ```
+```
+?abc=world&param=1&check=0
+```
 
-    You can either fetch individual arguments like:
+You can either fetch individual arguments like:
 
-    ```
-    abcVar, _ := req.GetArgument("abc").(string)
+```
+abcVar, _ := req.GetArgument("abc").(string)
 log.Println(abcVar)
+```
 
-    ```
+Or initialize a struct to convert all the arguments:
 
-    Or initialize a struct to convert all the arguments:
-
-
-        ```
-        type params struct {
-            abc string
-                param int
-                check int
-        }
+```
+type params struct {
+  abc string
+  param int
+  check int
+}
 
 getArgs := params{}
-    req.ConvertArguments(&getArgs)
+req.ConvertArguments(&getArgs)
 log.Println(getArgs.abc)
-    ```
+```
 
-    Available URLs
-    ==============
+Available URLs
+==============
 
-    With backends powered by Gottp, consumers can simply access http://{host}:{port}/urls to fetch a json of all URLs exposed by the application. URLs are returned as a map of key: pattern where the key is the human-readable-identifier provided at the time of constructing URLS and the pattern is the URL regular expression pattern.
+With backends powered by Gottp, consumers can simply access http://{host}:{port}/urls to fetch a json of all URLs exposed by the application. URLs are returned as a map of key: pattern where the key is the human-readable-identifier provided at the time of constructing URLS and the pattern is the URL regular expression pattern.
 
-    This helps in preventing hard coding of endpoints where consumers can fetch the URLs at application start time and reconstruct URLs using the indentifiers.
+This helps in preventing hard coding of endpoints where consumers can fetch the URLs at application start time and reconstruct URLs using the indentifiers.
 
-    Sample Output:
+Sample Output:
 
-    ```
+```
 {
-    "data": {
-        "hello": "/hello/\\w{3,5}/?$"
-    },
-    "message": "",
-    "status": 200
+  "data": {
+    "hello": "/hello/\\w{3,5}/?$"
+  },
+  "message": "",
+  "status": 200
 }
 ```
 
@@ -347,5 +345,6 @@ This can be enabled by setting EmailDummy as false in the gottp section of cfg.
 
 A sample traceback email looks like this:
 
+![Sample Traceback](http://test.simversity.com.s3.amazonaws.com/original_image/142052802943405598970493/emailtraceback.png)
 
 TODO: Expose a way to use custom email templates.
