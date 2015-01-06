@@ -1,46 +1,64 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
+
   <head>
-    <meta charset="utf-8">
+    <meta charset='utf-8'>
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Gottp by Simversity</title>
+    <meta name="description" content="Gottp : A tiny golang web framework">
 
-    <link rel="stylesheet" href="stylesheets/styles.css">
-    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-    <!--[if lt IE 9]>
-    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Gottp</title>
   </head>
+
   <body>
-    <div class="wrapper">
-      <header>
-        <h1>Gottp</h1>
-        <p>A tiny golang web framework</p>
 
-        <p class="view"><a href="https://github.com/Simversity/gottp">View the Project on GitHub <small>Simversity/gottp</small></a></p>
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/Simversity/gottp">View on GitHub</a>
 
+          <h1 id="project_title">Gottp</h1>
+          <h2 id="project_tagline">A tiny golang web framework</h2>
 
-        <ul>
-          <li><a href="https://github.com/Simversity/gottp/zipball/master">Download <strong>ZIP File</strong></a></li>
-          <li><a href="https://github.com/Simversity/gottp/tarball/master">Download <strong>TAR Ball</strong></a></li>
-          <li><a href="https://github.com/Simversity/gottp">View On <strong>GitHub</strong></a></li>
-        </ul>
-      </header>
-      <section>
-        <h1>
-<a name="gottp" class="anchor" href="#gottp"><span class="octicon octicon-link"></span></a>gottp</h1>
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/Simversity/gottp/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/Simversity/gottp/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
 
-<p>Gottp is not a regular front-end server to do customer facing websites. It has been designed using backend servers in mind. It offers a variety of features like Call Aggregation using Asynchronous or Blocking Pipes very much like Batch requests in Graph API. <a href="https://developers.facebook.com/docs/graph-api/making-multiple-requests">https://developers.facebook.com/docs/graph-api/making-multiple-requests</a></p>
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p><a href="https://travis-ci.org/Simversity/gottp"><img src="https://travis-ci.org/Simversity/gottp.svg?branch=master" alt="Build Status"></a></p>
 
 <h1>
-<a name="installation" class="anchor" href="#installation"><span class="octicon octicon-link"></span></a>Installation</h1>
+<a id="gottp" class="anchor" href="#gottp" aria-hidden="true"><span class="octicon octicon-link"></span></a>gottp</h1>
+
+<p>Gottp is not a regular front-end server to do user-facing CSS powered websites. It was designed using backend servers in mind and offers a variety of features like:</p>
+
+<ul>
+<li>Call Aggregation using Non-Blocking or Blocking Pipes. [1]</li>
+<li>Optionally Listens on Unix Domain socket.</li>
+<li>In-built error traceback emails.</li>
+<li>Optional data compression using zlib/gzip.</li>
+<li>Pagination support.</li>
+<li>Automatic listing of all exposed URLs</li>
+</ul>
+
+<p>[1] Much like Batch requests in Facebook Graph API (<a href="https://developers.facebook.com/docs/graph-api/making-multiple-requests">https://developers.facebook.com/docs/graph-api/making-multiple-requests</a>)</p>
+
+<h1>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h1>
+
+<p>Installation is as easy as:</p>
 
 <pre><code>go get github.com/Simversity/gottp
 </code></pre>
 
 <h1>
-<a name="getting-started" class="anchor" href="#getting-started"><span class="octicon octicon-link"></span></a>Getting Started</h1>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting Started</h1>
 
 <p><em>A sample application named helloWorld is available inside the tests directory of your checkout</em></p>
 
@@ -49,90 +67,85 @@
 <ul>
 <li>conf.go -&gt; Configuration</li>
 <li>main.go -&gt; main Server engine</li>
-<li>urls.go -&gt; Register acceptable urls &amp; handlers.</li>
-<li>handlers/hello.go -&gt; Register handlers that process the request.</li>
-</ul><h2>
-<a name="confgo" class="anchor" href="#confgo"><span class="octicon octicon-link"></span></a>conf.go</h2>
+<li>urls.go -&gt; Register urls &amp; corresponding handlers.</li>
+<li>handlers.go -&gt; handlers processing the request.</li>
+</ul>
 
-<p>A minimalist configuration looks like:</p>
+<h2>
+<a id="confgo" class="anchor" href="#confgo" aria-hidden="true"><span class="octicon octicon-link"></span></a>conf.go</h2>
 
-<pre><code>package main
+<p>This section is applicable only when you need to provide application based settings alongside those used by gottp.</p>
 
-import "github.com/Simversity/gottp"
+<p>Configuration must implement the Configurer interface.</p>
+
+<p>Configurer requires two method Sets:</p>
+
+<ul>
+<li>MakeConfig(string) which accepts the path of the .cfg file provided as an command line argument.</li>
+<li>GetGottpConfig() which must return the Settings</li>
+</ul>
+
+<pre><code>type Configurer interface {
+    MakeConfig(string)
+        GetGottpConfig() *GottpSettings
+}
+</code></pre>
+
+<p>A minimalist extended configuration looks like:</p>
+
+<pre><code>import (
+        "github.com/Simversity/gottp/conf"
+       )
 
 type config struct {
-    Gottp gottp.SettingsMap
+    Custom struct {
+        VarOne string
+            VarTwo string
+    }
+    Gottp conf.GottpSettings
 }
 
 func (self *config) MakeConfig(configPath string) {
-    gottp.Settings = self.Gottp
+    if configPath != "" {
+        conf.MakeConfig(configPath, self)
+    }
+}
+
+func (self *config) GetGottpConfig() *conf.GottpSettings {
+    return &amp;self.Gottp
 }
 
 var settings config
 </code></pre>
 
 <h2>
-<a name="maingo" class="anchor" href="#maingo"><span class="octicon octicon-link"></span></a>main.go</h2>
-
-<p>A sample main.go would look like:</p>
-
-<pre><code>package main
-
-import (
-    "log"
-    "github.com/Simversity/gottp"
-)
-
-func sysInit() {
-    &lt;-(gottp.SysInitChan) //Buffered Channel to receive the server upstart boolean
-    log.Println("System is ready to Serve")
-}
-
-func main() {
-    go sysInit()
-    gottp.BindHandlers(urls) //Urls is a slice of all the registered urls.
-    gottp.MakeServer(&amp;settings)
-}
-</code></pre>
-
-<h2>
-<a name="urlsgo" class="anchor" href="#urlsgo"><span class="octicon octicon-link"></span></a>urls.go</h2>
-
-<p>Urls are of type gottp.Url</p>
-
-<pre><code>type Url struct {
-    name    string //shortname of the url
-    url     string //provided regular pattern
-    handler func(r *Request) //ReuqestHandler 
-    pattern *regexp.Regexp //Compiled Regular Expression
-}
-</code></pre>
+<a id="urlsgo" class="anchor" href="#urlsgo" aria-hidden="true"><span class="octicon octicon-link"></span></a>urls.go</h2>
 
 <p>A sample urls.go looks like:</p>
 
 <pre><code>package main
 
 import (
-    "github.com/Simversity/gottp"
-)
+        "github.com/Simversity/gottp"
+       )
 
 var urls = []*gottp.Url{
     gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", handlers.HelloMessage),
 }
 </code></pre>
 
-<p>This would match all urls that are like "/hello/world" or "/hello/greet"</p>
+<p>This would match all urls that are like "/hello/world" or "/hello/greet" but NOT /hello/123 and not /hello/yester</p>
 
 <h2>
-<a name="handlersgo" class="anchor" href="#handlersgo"><span class="octicon octicon-link"></span></a>handlers.go</h2>
+<a id="handlersgo" class="anchor" href="#handlersgo" aria-hidden="true"><span class="octicon octicon-link"></span></a>handlers.go</h2>
 
 <p>A sample handler looks like:</p>
 
 <pre><code>package handlers
 
 import (
-    "github.com/Simversity/gottp"
-)
+        "github.com/Simversity/gottp"
+       )
 
 func HelloMessage(req *gottp.Request) {
     req.Write("hello world")
@@ -140,7 +153,26 @@ func HelloMessage(req *gottp.Request) {
 </code></pre>
 
 <h2>
-<a name="build--run" class="anchor" href="#build--run"><span class="octicon octicon-link"></span></a>Build &amp; Run</h2>
+<a id="maingo" class="anchor" href="#maingo" aria-hidden="true"><span class="octicon octicon-link"></span></a>main.go</h2>
+
+<p>A sample main.go looks like:</p>
+
+<pre><code>package main
+
+import (
+        "log"
+        "github.com/Simversity/gottp"
+       )
+
+func main() {
+    gottp.BindHandlers(urls) //Urls is a slice of all the registered urls.
+        gottp.MakeServer(&amp;settings)
+}
+
+</code></pre>
+
+<h2>
+<a id="build--run" class="anchor" href="#build--run" aria-hidden="true"><span class="octicon octicon-link"></span></a>Build &amp; Run</h2>
 
 <pre><code>go install test &amp;&amp; test
 </code></pre>
@@ -151,56 +183,201 @@ func HelloMessage(req *gottp.Request) {
 
 <pre><code>{
     "data": "hello world",
-    "message": "",
-    "status": 200
+        "message": "",
+        "status": 200
 }
 </code></pre>
 
-<h1>
-<a name="available-urls" class="anchor" href="#available-urls"><span class="octicon octicon-link"></span></a>Available URLs</h1>
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span class="octicon octicon-link"></span></a>Configuration</h2>
 
-<p>You can visit <a href="http://127.0.0.1:8005/urls">http://127.0.0.1:8005/urls</a> to access the URLs exposed by your application.</p>
+<p>Gottp allows you to provide .cfg files via the command line which is as easy as ./binary -config=path_to_cfg</p>
+
+<p>Default gottp settings is a struct called GottpSettings</p>
+
+<pre><code>type GottpSettings struct {
+    EmailHost     string //SMTP Host to send server Tracebacks.
+        EmailPort     string //SMTP Port
+        EmailUsername string //Username or Password to connect with SMTP
+        EmailPassword string
+        EmailSender   string   //Sender Name to be used for traceback.
+        EmailFrom     string   //Verified sender email address like errors@example.com
+        ErrorTo       []string //List of recipients for tracebacks.
+        EmailDummy    bool     //Set to True, if Tracebacks should not be sent.
+        Listen        string   //Address to Listen on default: 127.0.0.1:8005
+}
+</code></pre>
+
+<h2>
+<a id="cfg-sample" class="anchor" href="#cfg-sample" aria-hidden="true"><span class="octicon octicon-link"></span></a>.cfg sample</h2>
+
+<p>You can provide a simple configuration file in .cfg format to load the settings which would look like this:</p>
+
+<pre><code>[custom]
+VarOne="one"
+VarTwo="two"
+
+[gottp]
+listen="/tmp/custom.sock"
+EmailHost="email-smtp.us-east-1.amazonaws.com"
+EmailPort="587"
+EmailPassword="TDVAGCWCTCTWCTCQ&amp;&amp;*!!*!*!*/NeURB5"
+EmailUsername="HelloWorldSample"
+EmailSender="My Gottp Server"
+EmailFrom="errors@example.com"
+ErrorTo="dev@example.com"
+EmailDummy=false
+</code></pre>
+
+<h2>
+<a id="urls" class="anchor" href="#urls" aria-hidden="true"><span class="octicon octicon-link"></span></a>URLs</h2>
+
+<p>Urls are of type gottp.Url</p>
+
+<pre><code>type Url struct {
+    name    string //shortname of the url
+        url     string //provided regular pattern
+        handler func(r *Request) //ReuqestHandler
+        pattern *regexp.Regexp //Compiled Regular Expression
+}
+</code></pre>
+
+<p>URLs can be constructed using gottp.NewUrl which accepts shortname, regular expression &amp; request Handler respectively.</p>
+
+<h2>
+<a id="request-handler" class="anchor" href="#request-handler" aria-hidden="true"><span class="octicon octicon-link"></span></a>Request Handler</h2>
+
+<p>A request handler supplied to URLs can be a function or a closure that accepts gottp.Request as argument.</p>
+
+<p>Handler is responsible for writing the request data using request.Write(). Do note that gottp is purely JSON based so data is written with headers application/json.</p>
+
+<p>This can be improved with time, I intend to support other content-types by exposing extensible middlewares.</p>
+
+<p>Request exposes a few method structs:</p>
+
+<p>GetArguments() *utils.Q</p>
+
+<p>_
+Returns a map of all arguments passed to the request. This includes Body arguments in case of a PUT/POST request, url GET arguments and named arguments captured in URL regular expression. You can call this over as it handles caching internally.
+_</p>
+
+<p>GetArgument(key string) interface{}</p>
+
+<p>ConvertArguments(dest interface{})
+ConvertArgument(key string, dest interface{})</p>
+
+<p>These methods come quite handy when you have to deal with the arguments. For a request with GET arguments that look like:</p>
+
+<pre><code>?abc=world&amp;param=1&amp;check=0
+</code></pre>
+
+<p>You can either fetch individual arguments like:</p>
+
+<pre><code>abcVar, _ := req.GetArgument("abc").(string)
+log.Println(abcVar)
+</code></pre>
+
+<p>Or initialize a struct to convert all the arguments:</p>
+
+<pre><code>type params struct {
+  abc string
+  param int
+  check int
+}
+
+getArgs := params{}
+req.ConvertArguments(&amp;getArgs)
+log.Println(getArgs.abc)
+</code></pre>
+
+<h1>
+<a id="available-urls" class="anchor" href="#available-urls" aria-hidden="true"><span class="octicon octicon-link"></span></a>Available URLs</h1>
+
+<p>With backends powered by Gottp, consumers can simply access http://{host}:{port}/urls to fetch a json of all URLs exposed by the application. URLs are returned as a map of key: pattern where the key is the human-readable-identifier provided at the time of constructing URLS and the pattern is the URL regular expression pattern.</p>
+
+<p>This helps in preventing hard coding of endpoints where consumers can fetch the URLs at application start time and reconstruct URLs using the indentifiers.</p>
 
 <p>Sample Output:</p>
 
 <pre><code>{
-    "data": {
-        "hello": "/hello/\\w{3,5}/?$"
-    },
-    "message": "",
-    "status": 200
+  "data": {
+    "hello": "/hello/\\w{3,5}/?$"
+  },
+  "message": "",
+  "status": 200
 }
 </code></pre>
 
 <h1>
-<a name="command-line-options--cfg-files" class="anchor" href="#command-line-options--cfg-files"><span class="octicon octicon-link"></span></a>Command Line Options &amp; CFG files</h1>
+<a id="pipes" class="anchor" href="#pipes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Pipes</h1>
 
-<p>To be documented</p>
+<p>All gottp based servers allow clubbing of requests to be executed together. This is a very handy feature that is used for clubbing calls that need to processed one after the other. It can save the network handshaking costs as the handshake is only performed once and this does not effect server performance as all gottp requests are performed as goroutines.</p>
+
+<h2>
+<a id="sequential-pipes" class="anchor" href="#sequential-pipes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sequential Pipes</h2>
+
+<p>Example usage of such calls is:</p>
+
+<ol>
+<li>Create a Comment</li>
+<li>Mark the parent notification as read</li>
+<li>Send out notification to the parent autho</li>
+<li>Churn the new activity feed as per edge rank.</li>
+</ol>
+
+<p>Using Pipes, call 1, 2, 3 &amp; 4 can be combined into a single request to the server.</p>
+
+<p>All the requests would sequentially evaluated and data would be returned in the same order as requested.</p>
+
+<p>To submit a PIPE request issue a POST call on /pipe (available by default).</p>
+
+<h2>
+<a id="async-pipes" class="anchor" href="#async-pipes" aria-hidden="true"><span class="octicon octicon-link"></span></a>Async Pipes</h2>
+
+<p>Async pipes behave the same way, except the requests are executed in parallel
+as go-routines. Async pipes are as fast as the slowest call in your request
+stack.</p>
+
+<p>Despite parallel execution they return the data in the same order as requested.</p>
+
+<p>To submit an Async PIPE request issue a POST call on /async-pipe (available by default)</p>
+
+<h2>
+<a id="pipe-request-object" class="anchor" href="#pipe-request-object" aria-hidden="true"><span class="octicon octicon-link"></span></a>Pipe Request Object</h2>
+
+<p>Requests submitted as PIPEs should again be a valid JSON dump of</p>
+
+<pre><code>{
+    "stack": [
+        {"url": "/url1", "method": "POST", "data": {"sample": "json"}},
+        {"url": "/url2", "method": "GET", "data": {"get": "argument"}},
+        ...
+    ]
+}
+</code></pre>
 
 <h1>
-<a name="pipes--async-pipes" class="anchor" href="#pipes--async-pipes"><span class="octicon octicon-link"></span></a>Pipes &amp; Async Pipes</h1>
+<a id="error-reporting" class="anchor" href="#error-reporting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Error Reporting</h1>
 
-<p>To be documented</p>
+<p>Gottp can send error tracebacks if a request failed.
+This can be enabled by setting EmailDummy as false in the gottp section of cfg.</p>
 
-<h1>
-<a name="error-reporting" class="anchor" href="#error-reporting"><span class="octicon octicon-link"></span></a>Error Reporting</h1>
+<p>A sample traceback email looks like this:</p>
 
-<p>To be documented</p>
+<p><img src="http://test.simversity.com.s3.amazonaws.com/original_image/142052802943405598970493/emailtraceback.png" alt="Sample Traceback"></p>
 
-<h1>
-<a name="accessing-request-arguments" class="anchor" href="#accessing-request-arguments"><span class="octicon octicon-link"></span></a>Accessing Request Arguments</h1>
-
-<h1>
-<a name="to-be-documented" class="anchor" href="#to-be-documented"><span class="octicon octicon-link"></span></a>To be documented</h1>
-
-<p>... Working on Documentation, Should be available soon ...</p>
+<p>TODO: Expose a way to use custom email templates.</p>
       </section>
-      <footer>
-        <p>This project is maintained by <a href="https://github.com/Simversity">Simversity</a></p>
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Gottp maintained by <a href="https://github.com/Simversity">Simversity</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
       </footer>
     </div>
-    <script src="javascripts/scale.fix.js"></script>
+
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
@@ -211,6 +388,7 @@ func HelloMessage(req *gottp.Request) {
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
+
 
   </body>
 </html>
