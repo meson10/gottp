@@ -103,11 +103,12 @@ func Exception(req *Request) {
 			is_json = true
 		}
 
+		errorCode := http.StatusInternalServerError
 		if is_json {
-			e := HttpError{500, err.(string)}
+			e := HttpError{errorCode, err.(string)}
 			req.Raise(e)
 		} else {
-			http.Error(req.Writer, err.(string), 500)
+			http.Error(req.Writer, err.(string), errorCode)
 		}
 	}
 }

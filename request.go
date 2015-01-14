@@ -158,7 +158,7 @@ func (r *Request) Write(data interface{}) {
 	} else {
 		piped = utils.Q{
 			"data":    data,
-			"status":  200,
+			"status":  http.StatusOK,
 			"message": "",
 		}
 	}

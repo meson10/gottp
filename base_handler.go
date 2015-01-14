@@ -1,5 +1,7 @@
 package gottp
 
+import "net/http"
+
 type Handler interface {
 	Get(request *Request)
 	Put(request *Request)
@@ -16,7 +18,7 @@ type BaseHandler struct {
 }
 
 func notImplemented(request *Request) {
-	e := HttpError{405, "Method not Implemented"}
+	e := HttpError{http.StatusNotImplemented, "Method not Implemented"}
 	request.Raise(e)
 }
 
