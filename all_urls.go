@@ -4,11 +4,14 @@ type allUrls struct {
 	BaseHandler
 }
 
+var allUrlsMap = map[string]string{}
+
 func (self *allUrls) Get(req *Request) {
-	ret := map[string]string{}
-	for _, url := range boundUrls {
-		ret[url.name] = url.url
+	if len(allUrlsMap) == 0 {
+		for _, url := range boundUrls {
+			allUrlsMap[url.name] = url.url
+		}
 	}
 
-	req.Write(ret)
+	req.Write(allUrlsMap)
 }
