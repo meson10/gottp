@@ -95,8 +95,8 @@ import (
         "github.com/Simversity/gottp"
        )
 
-var urls = []*gottp.Url{
-    gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", handlers.HelloMessage),
+func init(){
+    gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", new(handlers.HelloMessage)),
 }
 ```
 
@@ -115,7 +115,11 @@ import (
         "github.com/Simversity/gottp"
        )
 
-func HelloMessage(req *gottp.Request) {
+type HelloMessage struct {
+  gottp.BaseHandler
+}
+
+func (self *HelloMessage) Get(req *gottp.Request) {
     req.Write("hello world")
 }
 ```
@@ -129,13 +133,12 @@ A sample main.go looks like:
 package main
 
 import (
-        "log"
-        "github.com/Simversity/gottp"
-       )
+    "log"
+    "github.com/Simversity/gottp"
+)
 
 func main() {
-    gottp.BindHandlers(urls) //Urls is a slice of all the registered urls.
-        gottp.MakeServer(&settings)
+  gottp.MakeServer(&settings)
 }
 
 ```
@@ -210,23 +213,53 @@ Urls are of type gottp.Url
 ```
 type Url struct {
     name    string //shortname of the url
-        url     string //provided regular pattern
-        handler func(r *Request) //ReuqestHandler
-        pattern *regexp.Regexp //Compiled Regular Expression
+    url     string //provided regular pattern
+    handler func(r *Request) //ReuqestHandler
+    pattern *regexp.Regexp //Compiled Regular Expression
 }
 ```
 
-URLs can be constructed using gottp.NewUrl which accepts shortname, regular expression & request Handler respectively.
+URLs can be constructed using gottp.NewUrl which accepts shortname, regular expression & Handler interface implementor respectively.
 
 
 Request Handler
 ---------------
 
-A request handler supplied to URLs can be a function or a closure that accepts gottp.Request as argument.
+A request handler must implement the Handler Interface which must expose the following methods
 
-Handler is responsible for writing the request data using request.Write(). Do note that gottp is purely JSON based so data is written with headers application/json.
+```
+type Handler interface {
+	Get(request *Request)
+	Put(request *Request)
+	Post(request *Request)
+	Delete(request *Request)
+	Head(request *Request)
+	Options(request *Request)
+	Patch(request *Request)
+}
 
-This can be improved with time, I intend to support other content-types by exposing extensible middlewares.
+```
+
+gottp.BaseHandler has most common HTTP requests as method sets. So, If a struct uses BaseHandler as an embedded type it is sufficient to qualify as a Handler. To expose a new HTTP method for a URL type, implement the HTTP method set in the handler struct. See the Example below:
+
+```
+type helloMessage struct {
+	gottp.BaseHandler
+}
+
+func (self *helloMessage) Get(req *gottp.Request) {
+	req.Write("hello world - GET")
+}
+
+func (self *helloMessage) Post(req *gottp.Request) {
+	req.Write("hello world - POST")
+}
+
+```
+
+
+Request
+-------
 
 Request exposes a few method structs:
 
