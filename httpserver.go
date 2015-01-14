@@ -15,14 +15,6 @@ const serverUA = "Gottp Server"
 const ERROR = `Oops! An Internal Error occured while performing that action.
 Please try again later`
 
-func getUrls(req *Request, urls []*Url) {
-	ret := map[string]string{}
-	for _, url := range urls {
-		ret[url.name] = url.url
-	}
-	req.Write(ret)
-}
-
 type eachCall struct {
 	Host   string
 	Method string                 `method`
@@ -30,8 +22,31 @@ type eachCall struct {
 	Data   map[string]interface{} `data`
 }
 
-func eachPipe(req *Request, call eachCall, urls []*Url) {
-	for _, url := range urls {
+func performRequest(handler Handler, p *Request) {
+	method := (*p).Request.Method
+
+	switch method {
+	case "GET":
+		handler.Get(p)
+	case "POST":
+		handler.Post(p)
+	case "PUT":
+		handler.Put(p)
+	case "DELETE":
+		handler.Delete(p)
+	case "HEAD":
+		handler.Head(p)
+	case "OPTIONS":
+		handler.Options(p)
+	case "PATCH":
+		handler.Patch(p)
+	default:
+		log.Println("Unsupported method", method)
+	}
+}
+
+func eachPipe(req *Request, call eachCall) {
+	for _, url := range boundUrls {
 		urlArgs, err := url.MakeUrlArgs(&call.Url)
 		if err {
 			continue
@@ -46,13 +61,13 @@ func eachPipe(req *Request, call eachCall, urls []*Url) {
 			pipeReq.Host = call.Host
 			req.Request = pipeReq
 			req.UrlArgs = urlArgs
-			url.handler(req)
+			performRequest(url.handler, req)
 		}
 		break
 	}
 }
 
-func performPipe(w http.ResponseWriter, req *http.Request, urls []*Url, async bool) {
+func performPipe(w http.ResponseWriter, req *http.Request, async bool) {
 
 	pipeUrls := []string{}
 
@@ -99,13 +114,13 @@ func performPipe(w http.ResponseWriter, req *http.Request, urls []*Url, async bo
 			go func(call eachCall) {
 				defer Exception(&pipeReq)
 				defer wg.Done()
-				eachPipe(&pipeReq, call, urls)
+				eachPipe(&pipeReq, call)
 			}(oneCall)
 		} else {
 			func(call eachCall) {
 				defer Exception(&pipeReq)
 				defer wg.Done()
-				eachPipe(&pipeReq, call, urls)
+				eachPipe(&pipeReq, call)
 			}(oneCall)
 		}
 	}
@@ -129,34 +144,35 @@ func timeTrack(start time.Time, req *http.Request) {
 	log.Printf("[%s] %s %s %s\n", req.Method, req.URL, req.RemoteAddr, elapsed)
 }
 
-func BindHandlers(urls []*Url) {
+func bindHandlers() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
 	http.HandleFunc("/async-pipe", func(w http.ResponseWriter, req *http.Request) {
-		performPipe(w, req, urls, true)
+		performPipe(w, req, true)
 	})
 
 	http.HandleFunc("/pipe", func(w http.ResponseWriter, req *http.Request) {
-		performPipe(w, req, urls, false)
+		performPipe(w, req, false)
 	})
 
 	http.HandleFunc("/urls", func(w http.ResponseWriter, req *http.Request) {
 		defer timeTrack(time.Now(), req)
+
 		p := Request{Writer: w, Request: req, UrlArgs: nil}
 		defer Exception(&p)
-		getUrls(&p, urls)
+		performRequest(new(allUrls), &p)
 		return
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		defer timeTrack(time.Now(), req)
 
-		for _, url := range urls {
+		for _, url := range boundUrls {
 			urlArgs, err := url.MakeUrlArgs(&req.URL.Path)
 			if !err {
 				p := Request{Writer: w, Request: req, UrlArgs: urlArgs}
 				defer Exception(&p)
-				url.handler(&p)
+				performRequest(url.handler, &p)
 				return
 			}
 		}

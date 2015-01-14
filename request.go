@@ -171,6 +171,8 @@ func (r *Request) Write(data interface{}) {
 	) {
 		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Header().Set("Content-Encoding", "deflate")
+		r.Writer.Header().Set("Content-Type", "application/json")
+
 		gz := zlib.NewWriter(r.Writer)
 		defer gz.Close()
 		gz.Write(utils.Encoder(piped))
@@ -180,12 +182,16 @@ func (r *Request) Write(data interface{}) {
 	) {
 		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Header().Set("Content-Encoding", "gzip")
+		r.Writer.Header().Set("Content-Type", "application/json")
+
 		gz := gzip.NewWriter(r.Writer)
 		defer gz.Close()
 		gz.Write(utils.Encoder(piped))
 
 	} else {
 		r.Writer.Header().Set("Server", serverUA)
+		r.Writer.Header().Set("Content-Type", "application/json")
+
 		r.Writer.Write(utils.Encoder(piped))
 	}
 }
