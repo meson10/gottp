@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	utils "github.com/Simversity/gottp/utils"
+	utils "gopkg.in/simversity/gottp.v1/utils"
 )
 
 const layout = "Jan 2, 2006 at 3:04pm (MST)"

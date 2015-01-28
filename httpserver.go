@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	utils "github.com/Simversity/gottp/utils"
+	utils "gopkg.in/simversity/gottp.v1/utils"
 )
 
 const serverUA = "Gottp Server"

@@ -11,7 +11,7 @@ import (
 	"strings"
 	"syscall"
 
-	conf "github.com/Simversity/gottp/conf"
+	conf "gopkg.in/simversity/gottp.v1/conf"
 )
 
 func cleanAddr(addr string) {

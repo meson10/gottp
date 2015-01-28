@@ -21,7 +21,7 @@ Installation
 Installation is as easy as:
 
 ```
-go get github.com/Simversity/gottp
+go get gopkg.in/simversity/gottp.v1
 ```
 
 Getting Started
@@ -59,7 +59,7 @@ A minimalist extended configuration looks like:
 
 ```
 import (
-        "github.com/Simversity/gottp/conf"
+        "gopkg.in/simversity/gottp.v1/conf"
        )
 
 type config struct {
@@ -92,7 +92,7 @@ A sample urls.go looks like:
 package main
 
 import (
-        "github.com/Simversity/gottp"
+        "gopkg.in/simversity/gottp.v1"
        )
 
 func init(){
@@ -112,7 +112,7 @@ A sample handler looks like:
 package handlers
 
 import (
-        "github.com/Simversity/gottp"
+        "gopkg.in/simversity/gottp.v1"
        )
 
 type HelloMessage struct {
@@ -134,7 +134,7 @@ package main
 
 import (
     "log"
-    "github.com/Simversity/gottp"
+    "gopkg.in/simversity/gottp.v1"
 )
 
 func main() {
