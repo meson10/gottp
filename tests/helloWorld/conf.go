@@ -1,6 +1,6 @@
 package main
 
-import "github.com/Simversity/gottp"
+import "gopkg.in/simversity/gottp.v0"
 
 type config struct {
 	Gottp gottp.SettingsMap

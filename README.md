@@ -9,7 +9,7 @@ Gottp is not a regular front-end server to do customer facing websites. It has b
 Installation
 =============
 ```
-go get github.com/Simversity/gottp
+go get gopkg.in/simversity/gottp.v0
 ```
 
 Getting Started
@@ -33,7 +33,7 @@ A minimalist configuration looks like:
 ```
 package main
 
-import "github.com/Simversity/gottp"
+import "gopkg.in/simversity/gottp.v0"
 
 type config struct {
 	Gottp gottp.SettingsMap
@@ -56,7 +56,7 @@ package main
 
 import (
     "log"
-	"github.com/Simversity/gottp"
+	"gopkg.in/simversity/gottp.v0"
 )
 
 func sysInit() {
@@ -91,7 +91,7 @@ A sample urls.go looks like:
 package main
 
 import (
-	"github.com/Simversity/gottp"
+	"gopkg.in/simversity/gottp.v0"
 )
 
 var urls = []*gottp.Url{
@@ -110,7 +110,7 @@ A sample handler looks like:
 package handlers
 
 import (
-	"github.com/Simversity/gottp"
+	"gopkg.in/simversity/gottp.v0"
 )
 
 func HelloMessage(req *gottp.Request) {

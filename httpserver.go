@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	utils "github.com/Simversity/gottp/utils"
+	utils "gopkg.in/simversity/gottp.v0/utils"
 )
 
 const ERROR = "An Internal Error has occured while processing this Request." +

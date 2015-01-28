@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Simversity/gottp"
+	"gopkg.in/simversity/gottp.v0"
 )
 
 var urls = []*gottp.Url{

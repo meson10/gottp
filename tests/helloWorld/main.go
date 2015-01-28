@@ -5,7 +5,7 @@ package main
 import (
 	"log"
 
-	"github.com/Simversity/gottp"
+	"gopkg.in/simversity/gottp.v0"
 )
 
 func sysInit() {

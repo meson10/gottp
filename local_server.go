@@ -12,7 +12,7 @@ import (
 	"strings"
 	"syscall"
 
-	utils "github.com/Simversity/gottp/utils"
+	utils "gopkg.in/simversity/gottp.v0/utils"
 )
 
 func cleanAddr(addr string) {
