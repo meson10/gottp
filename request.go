@@ -1,11 +1,13 @@
 package gottp
 
 import (
+	"compress/gzip"
+	"compress/zlib"
 	"net/http"
 	"strconv"
 	"strings"
-	//"compress/gzip"
-	utils "github.com/Simversity/gottp/utils"
+
+	"github.com/Simversity/gottp/utils"
 )
 
 //*http.Request, rw ResponseWriter
@@ -15,11 +17,6 @@ const SKIP = 0
 
 type WireSender interface {
 	SendOverWire() utils.Q
-}
-
-type HttpError struct {
-	Status  int
-	Message string
 }
 
 type Paginator struct {
@@ -56,28 +53,12 @@ func makeString(val interface{}) (ret string) {
 	return
 }
 
-func (e HttpError) SendOverWire() utils.Q {
-	if e.Status == 0 {
-		e.Status = 500
-	}
-
-	if len(e.Message) == 0 {
-		e.Message = "An Internal exception has occured. Please try again after some time"
-	}
-
-	return utils.Q{
-		"data":    nil,
-		"status":  e.Status,
-		"message": e.Message,
-	}
-}
-
 type Request struct {
 	Request    *http.Request
 	Writer     http.ResponseWriter
 	UrlArgs    *map[string]string
-	PipeOutput *[]utils.Q
-	PipeIndex  int
+	pipeOutput chan<- *utils.Q
+	pipeIndex  int
 	params     *utils.Q
 }
 
@@ -171,25 +152,56 @@ func (r *Request) ConvertArgument(key string, f interface{}) {
 
 func (r *Request) Write(data interface{}) {
 	var piped utils.Q
+
 	if v, ok := data.(WireSender); ok {
 		piped = v.SendOverWire()
 	} else {
 		piped = utils.Q{
 			"data":    data,
-			"status":  200,
+			"status":  http.StatusOK,
 			"message": "",
 		}
 	}
 
-	if r.PipeOutput != nil {
-		(*r.PipeOutput)[r.PipeIndex] = piped
-	} else if strings.Contains(r.Request.Header.Get("Accept-Encoding"), "gzip") {
-		r.Writer.Write(utils.Encoder(piped))
+	if r.pipeOutput != nil {
+		piped["index"] = r.pipeIndex
+		r.pipeOutput <- &piped
+	} else if strings.Contains(
+		r.Request.Header.Get("Accept-Encoding"), "deflate",
+	) {
+		r.Writer.Header().Set("Server", serverUA)
+		r.Writer.Header().Set("Content-Encoding", "deflate")
+		r.Writer.Header().Set("Content-Type", "application/json")
+
+		gz := zlib.NewWriter(r.Writer)
+		defer gz.Close()
+		gz.Write(utils.Encoder(piped))
+
+	} else if strings.Contains(
+		r.Request.Header.Get("Accept-Encoding"), "gzip",
+	) {
+		r.Writer.Header().Set("Server", serverUA)
+		r.Writer.Header().Set("Content-Encoding", "gzip")
+		r.Writer.Header().Set("Content-Type", "application/json")
+
+		gz := gzip.NewWriter(r.Writer)
+		defer gz.Close()
+		gz.Write(utils.Encoder(piped))
+
 	} else {
+		r.Writer.Header().Set("Server", serverUA)
+		r.Writer.Header().Set("Content-Type", "application/json")
+
 		r.Writer.Write(utils.Encoder(piped))
 	}
 }
 
 func (r *Request) Raise(e HttpError) {
-	r.Write(e)
+	if r.pipeOutput != nil {
+		piped := e.SendOverWire()
+		piped["index"] = r.pipeIndex
+		r.pipeOutput <- &piped
+	} else {
+		r.Write(e)
+	}
 }

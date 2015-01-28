@@ -52,7 +52,7 @@ func parseCLI() {
 	}
 }
 
-func MakeServer(cfg conf.Configurer) {
+func MakeConfig(cfg conf.Configurer) {
 	cfgPath, unixAddr := conf.CliArgs()
 	cfg.MakeConfig(cfgPath)
 
@@ -61,7 +61,10 @@ func MakeServer(cfg conf.Configurer) {
 	if unixAddr != "" {
 		settings.Gottp.Listen = unixAddr
 	}
+}
 
+func MakeServer(cfg conf.Configurer) {
+	MakeConfig(cfg)
 	makeServer()
 }
 
@@ -71,6 +74,8 @@ func DefaultServer() {
 }
 
 func makeServer() {
+	bindHandlers()
+
 	addr := settings.Gottp.Listen
 
 	SysInitChan <- true

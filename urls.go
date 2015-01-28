@@ -5,16 +5,26 @@ import "regexp"
 type Url struct {
 	name    string
 	url     string
-	handler func(r *Request)
+	handler Handler
 	pattern *regexp.Regexp
 }
 
-func NewUrl(name string, pattern string, handler func(r *Request)) *Url {
+var boundUrls = []*Url{}
+
+func NewUrl(name string, pattern string, handler Handler) {
 	compiled_pattern, err := regexp.Compile(pattern)
 	if err != nil {
 		panic(err)
 	}
-	return &Url{name: name, handler: handler, pattern: compiled_pattern, url: pattern}
+
+	url := Url{
+		name:    name,
+		handler: handler,
+		pattern: compiled_pattern,
+		url:     pattern,
+	}
+
+	boundUrls = append(boundUrls, &url)
 }
 
 func (u Url) MakeUrlArgs(url *string) (*map[string]string, bool) {

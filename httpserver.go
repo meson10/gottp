@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"log"
 	"net/http"
-	"runtime"
 	"strings"
 	"sync"
 	"time"
@@ -12,97 +11,9 @@ import (
 	utils "github.com/Simversity/gottp/utils"
 )
 
-const ERROR = "An Internal Error has occured while processing this Request." +
-	"If you believe this is an Error, please contact support team."
-
-func make_tag(name string, value string) string {
-	return "<b>" + name + "</b>" + ": " + value
-}
-
-func requestStack(req *Request) string {
-	var referrer string
-	if len(req.Request.Header["Referer"]) > 0 {
-		referrer = req.Request.Header["Referer"][0]
-	}
-
-	params := string(utils.Encoder(req.GetArguments()))
-
-	return strings.Join([]string{
-		make_tag("Host", req.Request.Host),
-		make_tag("Method", req.Request.Method),
-		make_tag("Protocol", req.Request.Proto),
-		make_tag("RemoteIP", req.Request.RemoteAddr),
-		make_tag("URI", req.Request.URL.Path),
-		make_tag("Referer", referrer),
-		make_tag("Arguments", params),
-	}, "<br/>")
-}
-
-func sendException(err interface{}, stack, buffer string) {
-	var exc_message string
-
-	switch err.(type) {
-	case string:
-		_err, ok := err.(string)
-		if ok == true {
-			exc_message = _err
-		}
-	case interface{}:
-		_err, ok := err.(error)
-		if ok == true {
-			exc_message = _err.Error()
-		}
-	}
-
-	log.Println(err, buffer)
-	connection := MakeConn()
-	connection.SenderName += " Exception"
-
-	go connection.SendEmail(Message{
-		settings.Gottp.EmailFrom,
-		settings.Gottp.ErrorTo,
-		exc_message,
-		ErrorTemplate(stack, buffer),
-	})
-
-}
-
-func Exception(req *Request) {
-	if err := recover(); err != nil {
-		const size = 4096
-		buf := make([]byte, size)
-		buf = buf[:runtime.Stack(buf, false)]
-
-		buffer := string(buf)
-		if req == nil {
-			sendException(err, "Error was raised in a goroutine", buffer)
-			return
-		}
-
-		var is_json bool
-		contentType := req.Request.Header["Content-Type"]
-		if len(contentType) > 0 && strings.Index(contentType[0], "json") > -1 {
-			is_json = true
-		}
-
-		defer sendException(err, requestStack(req), buffer)
-
-		if is_json {
-			e := HttpError{500, err.(string)}
-			req.Raise(e)
-		} else {
-			http.Error(req.Writer, err.(string), 500)
-		}
-	}
-}
-
-func getUrls(req *Request, urls []*Url) {
-	ret := map[string]string{}
-	for _, url := range urls {
-		ret[url.name] = url.url
-	}
-	req.Write(ret)
-}
+const serverUA = "Gottp Server"
+const ERROR = `Oops! An Internal Error occured while performing that action.
+Please try again later`
 
 type eachCall struct {
 	Host   string
@@ -111,8 +22,31 @@ type eachCall struct {
 	Data   map[string]interface{} `data`
 }
 
-func eachPipe(req *Request, call eachCall, urls []*Url) {
-	for _, url := range urls {
+func performRequest(handler Handler, p *Request) {
+	method := (*p).Request.Method
+
+	switch method {
+	case "GET":
+		handler.Get(p)
+	case "POST":
+		handler.Post(p)
+	case "PUT":
+		handler.Put(p)
+	case "DELETE":
+		handler.Delete(p)
+	case "HEAD":
+		handler.Head(p)
+	case "OPTIONS":
+		handler.Options(p)
+	case "PATCH":
+		handler.Patch(p)
+	default:
+		log.Println("Unsupported method", method)
+	}
+}
+
+func eachPipe(req *Request, call eachCall) {
+	for _, url := range boundUrls {
 		urlArgs, err := url.MakeUrlArgs(&call.Url)
 		if err {
 			continue
@@ -127,13 +61,13 @@ func eachPipe(req *Request, call eachCall, urls []*Url) {
 			pipeReq.Host = call.Host
 			req.Request = pipeReq
 			req.UrlArgs = urlArgs
-			url.handler(req)
+			performRequest(url.handler, req)
 		}
 		break
 	}
 }
 
-func performPipe(w http.ResponseWriter, req *http.Request, urls []*Url, async bool) {
+func performPipe(w http.ResponseWriter, req *http.Request, async bool) {
 
 	pipeUrls := []string{}
 
@@ -148,33 +82,56 @@ func performPipe(w http.ResponseWriter, req *http.Request, urls []*Url, async bo
 	var calls []eachCall
 	parentReq.ConvertArgument("stack", &calls)
 
-	po := make([]utils.Q, len(calls))
+	done := make(chan bool)
+	output := make([]*utils.Q, len(calls))
+	po := make(chan *utils.Q, len(calls))
 
 	var wg sync.WaitGroup
+
+	go func(sink <-chan *utils.Q) {
+		for {
+			v, more := <-sink
+			if more {
+				if index, ok := (*v)["index"].(int); ok {
+					output[index] = v
+				}
+			} else {
+				done <- true
+				return
+			}
+		}
+
+	}(po)
+
 	for index, oneCall := range calls {
 		oneCall.Host = req.Host
 		pipeUrls = append(pipeUrls, oneCall.Url)
-		pipeReq := Request{PipeOutput: &po, PipeIndex: index}
+		pipeReq := Request{pipeOutput: po, pipeIndex: index}
+
+		wg.Add(1)
 
 		if async {
-			wg.Add(1)
 			go func(call eachCall) {
-				defer Exception(&parentReq)
+				defer Exception(&pipeReq)
 				defer wg.Done()
-				eachPipe(&pipeReq, call, urls)
+				eachPipe(&pipeReq, call)
 			}(oneCall)
 		} else {
-			eachPipe(&pipeReq, oneCall, urls)
+			func(call eachCall) {
+				defer Exception(&pipeReq)
+				defer wg.Done()
+				eachPipe(&pipeReq, call)
+			}(oneCall)
 		}
 	}
 
 	defer pipeTimeTrack(time.Now(), req, strings.Join(pipeUrls, ", "))
 
-	if async {
-		wg.Wait()
-	}
+	wg.Wait()
+	close(po)
 
-	parentReq.Write(po)
+	<-done
+	parentReq.Write(output)
 }
 
 func pipeTimeTrack(start time.Time, req *http.Request, pipeUrls string) {
@@ -187,34 +144,35 @@ func timeTrack(start time.Time, req *http.Request) {
 	log.Printf("[%s] %s %s %s\n", req.Method, req.URL, req.RemoteAddr, elapsed)
 }
 
-func BindHandlers(urls []*Url) {
+func bindHandlers() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
 	http.HandleFunc("/async-pipe", func(w http.ResponseWriter, req *http.Request) {
-		performPipe(w, req, urls, true)
+		performPipe(w, req, true)
 	})
 
 	http.HandleFunc("/pipe", func(w http.ResponseWriter, req *http.Request) {
-		performPipe(w, req, urls, false)
+		performPipe(w, req, false)
 	})
 
 	http.HandleFunc("/urls", func(w http.ResponseWriter, req *http.Request) {
 		defer timeTrack(time.Now(), req)
+
 		p := Request{Writer: w, Request: req, UrlArgs: nil}
 		defer Exception(&p)
-		getUrls(&p, urls)
+		performRequest(new(allUrls), &p)
 		return
 	})
 
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		defer timeTrack(time.Now(), req)
 
-		for _, url := range urls {
+		for _, url := range boundUrls {
 			urlArgs, err := url.MakeUrlArgs(&req.URL.Path)
 			if !err {
 				p := Request{Writer: w, Request: req, UrlArgs: urlArgs}
 				defer Exception(&p)
-				url.handler(&p)
+				performRequest(url.handler, &p)
 				return
 			}
 		}
