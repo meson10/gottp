@@ -1,39 +1,34 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
   <head>
-    <meta charset='utf-8'>
+    <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="Gottp : A tiny golang web framework">
+    <title>Gottp by Simversity</title>
 
-    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
-
-    <title>Gottp</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
   </head>
-
   <body>
+    <div class="wrapper">
+      <header>
+        <h1>Gottp</h1>
+        <p>A tiny golang web framework</p>
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/Simversity/gottp">View on GitHub</a>
+        <p class="view"><a href="https://github.com/Simversity/gottp">View the Project on GitHub <small>Simversity/gottp</small></a></p>
 
-          <h1 id="project_title">Gottp</h1>
-          <h2 id="project_tagline">A tiny golang web framework</h2>
 
-            <section id="downloads">
-              <a class="zip_download_link" href="https://github.com/Simversity/gottp/zipball/master">Download this project as a .zip file</a>
-              <a class="tar_download_link" href="https://github.com/Simversity/gottp/tarball/master">Download this project as a tar.gz file</a>
-            </section>
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h3>
-<a id="" class="anchor" href="#" aria-hidden="true"><span class="octicon octicon-link"></span></a><a href="https://travis-ci.org/Simversity/gottp"><img src="https://travis-ci.org/Simversity/gottp.svg?branch=master" alt="Build Status"></a>
-</h3>
+        <ul>
+          <li><a href="https://github.com/Simversity/gottp/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/Simversity/gottp/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/Simversity/gottp">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <p><a href="https://travis-ci.org/Simversity/gottp"><img src="https://travis-ci.org/Simversity/gottp.svg?branch=master" alt="Build Status"></a></p>
 
 <h1>
 <a id="gottp" class="anchor" href="#gottp" aria-hidden="true"><span class="octicon octicon-link"></span></a>gottp</h1>
@@ -56,7 +51,7 @@
 
 <p>Installation is as easy as:</p>
 
-<pre><code>go get github.com/Simversity/gottp
+<pre><code>go get gopkg.in/simversity/gottp.v1
 </code></pre>
 
 <h1>
@@ -96,7 +91,7 @@
 <p>A minimalist extended configuration looks like:</p>
 
 <pre><code>import (
-        "github.com/Simversity/gottp/conf"
+        "gopkg.in/simversity/gottp.v1/conf"
        )
 
 type config struct {
@@ -128,11 +123,11 @@ var settings config
 <pre><code>package main
 
 import (
-        "github.com/Simversity/gottp"
+        "gopkg.in/simversity/gottp.v1"
        )
 
-var urls = []*gottp.Url{
-    gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", handlers.HelloMessage),
+func init(){
+    gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", new(handlers.HelloMessage)),
 }
 </code></pre>
 
@@ -146,10 +141,14 @@ var urls = []*gottp.Url{
 <pre><code>package handlers
 
 import (
-        "github.com/Simversity/gottp"
+        "gopkg.in/simversity/gottp.v1"
        )
 
-func HelloMessage(req *gottp.Request) {
+type HelloMessage struct {
+  gottp.BaseHandler
+}
+
+func (self *HelloMessage) Get(req *gottp.Request) {
     req.Write("hello world")
 }
 </code></pre>
@@ -162,13 +161,12 @@ func HelloMessage(req *gottp.Request) {
 <pre><code>package main
 
 import (
-        "log"
-        "github.com/Simversity/gottp"
-       )
+    "log"
+    "gopkg.in/simversity/gottp.v1"
+)
 
 func main() {
-    gottp.BindHandlers(urls) //Urls is a slice of all the registered urls.
-        gottp.MakeServer(&amp;settings)
+  gottp.MakeServer(&amp;settings)
 }
 
 </code></pre>
@@ -238,22 +236,49 @@ EmailDummy=false
 
 <pre><code>type Url struct {
     name    string //shortname of the url
-        url     string //provided regular pattern
-        handler func(r *Request) //ReuqestHandler
-        pattern *regexp.Regexp //Compiled Regular Expression
+    url     string //provided regular pattern
+    handler func(r *Request) //ReuqestHandler
+    pattern *regexp.Regexp //Compiled Regular Expression
 }
 </code></pre>
 
-<p>URLs can be constructed using gottp.NewUrl which accepts shortname, regular expression &amp; request Handler respectively.</p>
+<p>URLs can be constructed using gottp.NewUrl which accepts shortname, regular expression &amp; Handler interface implementor respectively.</p>
 
 <h2>
 <a id="request-handler" class="anchor" href="#request-handler" aria-hidden="true"><span class="octicon octicon-link"></span></a>Request Handler</h2>
 
-<p>A request handler supplied to URLs can be a function or a closure that accepts gottp.Request as argument.</p>
+<p>A request handler must implement the Handler Interface which must expose the following methods</p>
 
-<p>Handler is responsible for writing the request data using request.Write(). Do note that gottp is purely JSON based so data is written with headers application/json.</p>
+<pre><code>type Handler interface {
+    Get(request *Request)
+    Put(request *Request)
+    Post(request *Request)
+    Delete(request *Request)
+    Head(request *Request)
+    Options(request *Request)
+    Patch(request *Request)
+}
 
-<p>This can be improved with time, I intend to support other content-types by exposing extensible middlewares.</p>
+</code></pre>
+
+<p>gottp.BaseHandler has most common HTTP requests as method sets. So, If a struct uses BaseHandler as an embedded type it is sufficient to qualify as a Handler. To expose a new HTTP method for a URL type, implement the HTTP method set in the handler struct. See the Example below:</p>
+
+<pre><code>type helloMessage struct {
+    gottp.BaseHandler
+}
+
+func (self *helloMessage) Get(req *gottp.Request) {
+    req.Write("hello world - GET")
+}
+
+func (self *helloMessage) Post(req *gottp.Request) {
+    req.Write("hello world - POST")
+}
+
+</code></pre>
+
+<h2>
+<a id="request" class="anchor" href="#request" aria-hidden="true"><span class="octicon octicon-link"></span></a>Request</h2>
 
 <p>Request exposes a few method structs:</p>
 
@@ -344,42 +369,43 @@ stack.</p>
 
 <p>To submit an Async PIPE request issue a POST call on /async-pipe (available by default)</p>
 
-<h2>
-<a id="pipe-request-object" class="anchor" href="#pipe-request-object" aria-hidden="true"><span class="octicon octicon-link"></span></a>Pipe Request Object</h2>
+<pre><code>
+Pipe Request Object
+-------------------
 
-<p>Requests submitted as PIPEs should again be a valid JSON dump of</p>
+Requests submitted as PIPEs should again be a valid JSON dump of
 
-<pre><code>{
+
+</code></pre>
+
+<p>{
     "stack": [
         {"url": "/url1", "method": "POST", "data": {"sample": "json"}},
         {"url": "/url2", "method": "GET", "data": {"get": "argument"}},
         ...
     ]
-}
+}</p>
+
+<pre><code>
+Error Reporting
+===============
+
+Gottp can send error tracebacks if a request failed.
+This can be enabled by setting EmailDummy as false in the gottp section of cfg.
+
+A sample traceback email looks like this:
+
+![Sample Traceback](http://test.simversity.com.s3.amazonaws.com/original_image/142052802943405598970493/emailtraceback.png)
+
+TODO: Expose a way to use custom email templates.
 </code></pre>
-
-<h1>
-<a id="error-reporting" class="anchor" href="#error-reporting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Error Reporting</h1>
-
-<p>Gottp can send error tracebacks if a request failed.
-This can be enabled by setting EmailDummy as false in the gottp section of cfg.</p>
-
-<p>A sample traceback email looks like this:</p>
-
-<p><img src="http://test.simversity.com.s3.amazonaws.com/original_image/142052802943405598970493/emailtraceback.png" alt="Sample Traceback"></p>
-
-<p>TODO: Expose a way to use custom email templates.</p>
       </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        <p class="copyright">Gottp maintained by <a href="https://github.com/Simversity">Simversity</a></p>
-        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/Simversity">Simversity</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
       </footer>
     </div>
-
+    <script src="javascripts/scale.fix.js"></script>
               <script type="text/javascript">
             var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
             document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
@@ -390,7 +416,6 @@ This can be enabled by setting EmailDummy as false in the gottp section of cfg.<
             pageTracker._trackPageview();
             } catch(err) {}
           </script>
-
 
   </body>
 </html>
