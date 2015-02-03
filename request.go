@@ -150,6 +150,12 @@ func (r *Request) ConvertArgument(key string, f interface{}) {
 	utils.Convert(val, f)
 }
 
+func (r *Request) Finish(data interface{}) []byte {
+	r.Writer.Header().Set("Server", serverUA)
+	r.Writer.Header().Set("Content-Type", "application/json")
+	return utils.Encoder(data)
+}
+
 func (r *Request) Write(data interface{}) {
 	var piped utils.Q
 
@@ -169,30 +175,23 @@ func (r *Request) Write(data interface{}) {
 	} else if strings.Contains(
 		r.Request.Header.Get("Accept-Encoding"), "deflate",
 	) {
-		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Header().Set("Content-Encoding", "deflate")
-		r.Writer.Header().Set("Content-Type", "application/json")
 
 		gz := zlib.NewWriter(r.Writer)
 		defer gz.Close()
-		gz.Write(utils.Encoder(piped))
+		gz.Write(r.Finish(piped))
 
 	} else if strings.Contains(
 		r.Request.Header.Get("Accept-Encoding"), "gzip",
 	) {
-		r.Writer.Header().Set("Server", serverUA)
 		r.Writer.Header().Set("Content-Encoding", "gzip")
-		r.Writer.Header().Set("Content-Type", "application/json")
 
 		gz := gzip.NewWriter(r.Writer)
 		defer gz.Close()
-		gz.Write(utils.Encoder(piped))
+		gz.Write(r.Finish(piped))
 
 	} else {
-		r.Writer.Header().Set("Server", serverUA)
-		r.Writer.Header().Set("Content-Type", "application/json")
-
-		r.Writer.Write(utils.Encoder(piped))
+		r.Writer.Write(r.Finish(piped))
 	}
 }
 
