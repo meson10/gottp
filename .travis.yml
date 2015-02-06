@@ -8,3 +8,6 @@ before_install:
 
 script:
   - go build -v ./...
+
+notifications:
+  slack: siminars:st82ura5uv0xQ52hTmHCqiNs
