@@ -152,6 +152,7 @@ func (r *Request) ConvertArgument(key string, f interface{}) {
 
 func (r *Request) Finish(data interface{}) []byte {
 	r.Writer.Header().Set("Server", serverUA)
+	r.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	r.Writer.Header().Set("Content-Type", "application/json")
 	return utils.Encoder(data)
 }
