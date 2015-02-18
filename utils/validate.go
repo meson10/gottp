@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+func Validate(obj interface{}) *[]error {
+	faults := []error{}
+	ValidateStruct(&faults, obj)
+	return &faults
+}
+
 func ValidateStruct(faults *[]error, obj interface{}) {
 	typ := reflect.TypeOf(obj)
 	val := reflect.ValueOf(obj)
