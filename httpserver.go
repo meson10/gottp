@@ -144,10 +144,24 @@ func timeTrack(start time.Time, req *http.Request) {
 	log.Printf("[%s] %s %s %s\n", req.Method, req.URL, req.RemoteAddr, elapsed)
 }
 
+func performUrls(w http.ResponseWriter, req *http.Request) {
+	defer timeTrack(time.Now(), req)
+
+	p := Request{Writer: w, Request: req, UrlArgs: nil}
+	defer Exception(&p)
+	performRequest(new(allUrls), &p)
+	return
+}
+
 func bindHandlers() {
 	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 
 	http.HandleFunc("/async-pipe", func(w http.ResponseWriter, req *http.Request) {
+		performPipe(w, req, true)
+		return
+	})
+
+	http.HandleFunc("/async-pipe/", func(w http.ResponseWriter, req *http.Request) {
 		performPipe(w, req, true)
 		return
 	})
@@ -157,12 +171,18 @@ func bindHandlers() {
 		return
 	})
 
-	http.HandleFunc("/urls", func(w http.ResponseWriter, req *http.Request) {
-		defer timeTrack(time.Now(), req)
+	http.HandleFunc("/pipe/", func(w http.ResponseWriter, req *http.Request) {
+		performPipe(w, req, false)
+		return
+	})
 
-		p := Request{Writer: w, Request: req, UrlArgs: nil}
-		defer Exception(&p)
-		performRequest(new(allUrls), &p)
+	http.HandleFunc("/urls", func(w http.ResponseWriter, req *http.Request) {
+		performUrls(w, req)
+		return
+	})
+
+	http.HandleFunc("/urls/", func(w http.ResponseWriter, req *http.Request) {
+		performUrls(w, req)
 		return
 	})
 
