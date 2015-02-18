@@ -149,10 +149,12 @@ func bindHandlers() {
 
 	http.HandleFunc("/async-pipe", func(w http.ResponseWriter, req *http.Request) {
 		performPipe(w, req, true)
+		return
 	})
 
 	http.HandleFunc("/pipe", func(w http.ResponseWriter, req *http.Request) {
 		performPipe(w, req, false)
+		return
 	})
 
 	http.HandleFunc("/urls", func(w http.ResponseWriter, req *http.Request) {
@@ -167,16 +169,20 @@ func bindHandlers() {
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		defer timeTrack(time.Now(), req)
 
+		request := Request{Writer: w, Request: req}
+		defer Exception(&request)
+
 		for _, url := range boundUrls {
 			urlArgs, err := url.MakeUrlArgs(&req.URL.Path)
 			if !err {
-				p := Request{Writer: w, Request: req, UrlArgs: urlArgs}
-				defer Exception(&p)
-				performRequest(url.handler, &p)
+				request.UrlArgs = urlArgs
+				performRequest(url.handler, &request)
 				return
 			}
 		}
 
-		http.NotFound(w, req)
+		e := HttpError{404, req.URL.Path + " not Found"}
+		request.Raise(e)
+		return
 	})
 }
