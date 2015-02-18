@@ -197,11 +197,5 @@ func (r *Request) Write(data interface{}) {
 }
 
 func (r *Request) Raise(e HttpError) {
-	if r.pipeOutput != nil {
-		piped := e.SendOverWire()
-		piped["index"] = r.pipeIndex
-		r.pipeOutput <- &piped
-	} else {
-		r.Write(e)
-	}
+	r.Write(e)
 }
