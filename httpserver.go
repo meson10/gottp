@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	utils "gopkg.in/simversity/gottp.v1/utils"
+	utils "gopkg.in/simversity/gottp.v2/utils"
 )
 
 const serverUA = "Gottp Server"
@@ -72,7 +72,7 @@ func performPipe(w http.ResponseWriter, req *http.Request, async bool) {
 	pipeUrls := []string{}
 
 	parentReq := Request{Writer: w, Request: req, UrlArgs: nil}
-	defer Exception(&parentReq)
+	defer Tracer.Notify(getTracerExtra(&parentReq))
 
 	if req.Method != "POST" {
 		parentReq.Write("Pipe/Async-Pipe only supports POST request.")
@@ -112,13 +112,13 @@ func performPipe(w http.ResponseWriter, req *http.Request, async bool) {
 
 		if async {
 			go func(call eachCall) {
-				defer Exception(&pipeReq)
+				defer Tracer.Notify(getTracerExtra(&pipeReq))
 				defer wg.Done()
 				eachPipe(&pipeReq, call)
 			}(oneCall)
 		} else {
 			func(call eachCall) {
-				defer Exception(&pipeReq)
+				defer Tracer.Notify(getTracerExtra(&pipeReq))
 				defer wg.Done()
 				eachPipe(&pipeReq, call)
 			}(oneCall)
@@ -148,7 +148,7 @@ func performUrls(w http.ResponseWriter, req *http.Request) {
 	defer timeTrack(time.Now(), req)
 
 	p := Request{Writer: w, Request: req, UrlArgs: nil}
-	defer Exception(&p)
+	defer Tracer.Notify(getTracerExtra(&p))
 	performRequest(new(allUrls), &p)
 	return
 }
@@ -190,7 +190,7 @@ func bindHandlers() {
 		defer timeTrack(time.Now(), req)
 
 		request := Request{Writer: w, Request: req}
-		defer Exception(&request)
+		defer Tracer.Notify(getTracerExtra(&request))
 
 		for _, url := range boundUrls {
 			urlArgs, err := url.MakeUrlArgs(&req.URL.Path)

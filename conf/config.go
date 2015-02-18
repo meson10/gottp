@@ -7,7 +7,7 @@ type GottpSettings struct {
 	EmailPassword string
 	EmailSender   string
 	EmailFrom     string
-	ErrorTo       []string
+	ErrorTo       string
 	EmailDummy    bool
 	Listen        string
 }

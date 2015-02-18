@@ -11,7 +11,8 @@ import (
 	"strings"
 	"syscall"
 
-	conf "gopkg.in/simversity/gottp.v1/conf"
+	traceback "gopkg.in/simversity/gotracer.v1"
+	conf "gopkg.in/simversity/gottp.v2/conf"
 )
 
 func cleanAddr(addr string) {
@@ -43,6 +44,8 @@ var SysInitChan = make(chan bool, 1)
 
 var settings conf.Config
 
+var Tracer traceback.Tracer
+
 func parseCLI() {
 	cfgPath, unixAddr := conf.CliArgs()
 	settings.MakeConfig(cfgPath)
@@ -63,8 +66,23 @@ func MakeConfig(cfg conf.Configurer) {
 	}
 }
 
+func MakeExcpetionListener(settings *conf.Config) {
+	Tracer = traceback.Tracer{
+		Dummy:         settings.Gottp.EmailDummy,
+		EmailHost:     settings.Gottp.EmailHost,
+		EmailPort:     settings.Gottp.EmailPort,
+		EmailPassword: settings.Gottp.EmailPassword,
+		EmailUsername: settings.Gottp.EmailUsername,
+		EmailSender:   settings.Gottp.EmailSender,
+		EmailFrom:     settings.Gottp.EmailFrom,
+		ErrorTo:       settings.Gottp.ErrorTo,
+	}
+}
+
 func MakeServer(cfg conf.Configurer) {
 	MakeConfig(cfg)
+	MakeExcpetionListener(&settings)
+
 	makeServer()
 }
 

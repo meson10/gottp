@@ -3,7 +3,7 @@ package gottp
 import (
 	"net/http"
 
-	utils "gopkg.in/simversity/gottp.v1/utils"
+	utils "gopkg.in/simversity/gottp.v2/utils"
 )
 
 type HttpError struct {
