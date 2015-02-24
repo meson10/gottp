@@ -22,11 +22,13 @@ func cleanAddr(addr string) {
 	}
 }
 
-func interrupt_cleanup(addr string) {
-	if strings.Index(addr, "/") != 0 {
-		return
-	}
+var cleanupFuncs = []func(){}
 
+func OnSysExit(cleanup func()) {
+	cleanupFuncs = append(cleanupFuncs, cleanup)
+}
+
+func interrupt_cleanup(addr string) {
 	sigchan := make(chan os.Signal, 10)
 	signal.Notify(sigchan, os.Interrupt, syscall.SIGTERM)
 	//NOTE: Capture every Signal right now.
@@ -35,8 +37,19 @@ func interrupt_cleanup(addr string) {
 	s := <-sigchan
 	log.Println("Exiting Program. Got Signal: ", s)
 
-	// do last actions and wait for all write operations to end
-	cleanAddr(addr)
+	if strings.Index(addr, "/") == 0 {
+		// do last actions and wait for all write operations to end
+		cleanAddr(addr)
+	}
+
+	if len(cleanupFuncs) > 0 {
+		log.Println("Performing Cleanup routines")
+
+		for i := range cleanupFuncs {
+			cleanupFuncs[i]()
+		}
+	}
+
 	os.Exit(0)
 }
 
@@ -103,6 +116,8 @@ func makeServer() {
 		log.Println("Listening on " + addr)
 	}
 
+	go interrupt_cleanup(addr)
+
 	if strings.Index(addr, "/") == 0 {
 		listener, err := net.Listen("unix", addr)
 		if err != nil {
@@ -122,7 +137,6 @@ func makeServer() {
 			}
 		}
 
-		go interrupt_cleanup(addr)
 		os.Chmod(addr, 0770)
 		serverError = http.Serve(listener, nil)
 	} else {
