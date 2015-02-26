@@ -26,9 +26,6 @@ func spawner() {
 	}
 
 	go spawner()
-	defer func() {
-		log.Println("Exiting Go spawner")
-	}()
 }
 
 func workerWrapper() {
