@@ -1,7 +1,6 @@
 package gottp
 
 import (
-	"gopkg.in/simversity/gotracer.v1"
 	"log"
 	"sync"
 	"time"
@@ -18,33 +17,31 @@ var wg = new(sync.WaitGroup)
 func spawner() {
 	go workerWrapper()
 
-	s := <-errChan
-	if s {
-		go spawner()
+	_, ok := <-errChan
+	if !ok {
+		log.Println("Timing out in 10 seconds")
+		time.Sleep(10 * time.Second)
+		wg.Done()
+		return
 	}
+
+	go spawner()
+	defer func() {
+		log.Println("Exiting Go spawner")
+	}()
 }
 
 func workerWrapper() {
-
 	wg.Add(1)
-
 	defer wg.Done()
-	defer gotracer.Tracer{
-		Dummy:         settings.Gottp.EmailDummy,
-		EmailHost:     settings.Gottp.EmailHost,
-		EmailPort:     settings.Gottp.EmailPort,
-		EmailPassword: settings.Gottp.EmailPassword,
-		EmailUsername: settings.Gottp.EmailUsername,
-		EmailSender:   settings.Gottp.EmailSender,
-		EmailFrom:     settings.Gottp.EmailFrom,
-		ErrorTo:       settings.Gottp.ErrorTo,
-	}.Notify(func() string {
+
+	// Trusing the fact that Tracer will always execute callback.
+	defer Tracer.Notify(func() string {
 		errChan <- true
 		return "Exception in worker"
 	})
 
 	worker(exitChan)
-	errChan <- false
 }
 
 func RunWorker(wk func(chan bool)) {
@@ -55,23 +52,13 @@ func RunWorker(wk func(chan bool)) {
 	go spawner()
 }
 
-func waitForWorker(compl chan<- bool) {
-	wg.Wait()
-	compl <- true
-}
-
-func StopWorker() {
-	if worker != nil {
-		waitChannel := make(chan bool)
-		go waitForWorker(waitChannel)
-		exitChan <- true
-
-		select {
-		case <-waitChannel:
-		case <-time.After(10 * time.Second):
-			log.Println("Timing out")
-
-		}
-		worker = nil
+func shutdownWorker() {
+	if worker == nil {
+		return
 	}
+
+	log.Println("Preparing for shutdown")
+	exitChan <- true
+	close(errChan)
+	wg.Wait()
 }
