@@ -7,11 +7,11 @@ import (
 
 var workerRunning bool
 
-var worker func(chan bool, chan bool)
+var worker func(chan bool)
 
 var errChan = make(chan bool)
 
-var exitChan = make(chan bool)
+var exitChan = make(chan bool, 1)
 
 var wg = new(sync.WaitGroup)
 
@@ -34,11 +34,11 @@ func workerWrapper() {
 		return "Exception in worker"
 	})
 
-	worker(errChan, exitChan)
+	worker(exitChan)
 	errChan <- false
 }
 
-func RunWorker(wk func(chan bool, chan bool)) {
+func RunWorker(wk func(chan bool)) {
 	if workerRunning {
 		panic("Worker already running.")
 	}
