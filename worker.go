@@ -29,7 +29,16 @@ func workerWrapper() {
 	wg.Add(1)
 
 	defer wg.Done()
-	defer gotracer.Tracer{Dummy: true}.Notify(func() string {
+	defer gotracer.Tracer{
+		Dummy:         settings.Gottp.EmailDummy,
+		EmailHost:     settings.Gottp.EmailHost,
+		EmailPort:     settings.Gottp.EmailPort,
+		EmailPassword: settings.Gottp.EmailPassword,
+		EmailUsername: settings.Gottp.EmailUsername,
+		EmailSender:   settings.Gottp.EmailSender,
+		EmailFrom:     settings.Gottp.EmailFrom,
+		ErrorTo:       settings.Gottp.ErrorTo,
+	}.Notify(func() string {
 		errChan <- true
 		return "Exception in worker"
 	})
