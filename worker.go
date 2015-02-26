@@ -39,6 +39,9 @@ func workerWrapper() {
 }
 
 func RunWorker(wk func(chan bool, chan bool)) {
+	if workerRunning {
+		panic("Worker already running.")
+	}
 	worker = wk
 	workerRunning = true
 	go spawner()
@@ -48,5 +51,6 @@ func StopWorker() {
 	if workerRunning {
 		exitChan <- true
 		wg.Wait()
+		workerRunning = false
 	}
 }
