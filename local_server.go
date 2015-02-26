@@ -50,6 +50,8 @@ func interrupt_cleanup(addr string) {
 		}
 	}
 
+	shutdownWorker()
+
 	os.Exit(0)
 }
 
