@@ -5,8 +5,6 @@ import (
 	"sync"
 )
 
-var workerRunning bool
-
 var worker func(chan bool)
 
 var errChan = make(chan bool)
@@ -48,18 +46,17 @@ func workerWrapper() {
 }
 
 func RunWorker(wk func(chan bool)) {
-	if workerRunning {
+	if wk != nil {
 		panic("Worker already running.")
 	}
 	worker = wk
-	workerRunning = true
 	go spawner()
 }
 
 func StopWorker() {
-	if workerRunning {
+	if wk != nil {
 		exitChan <- true
 		wg.Wait()
-		workerRunning = false
+		wk = nil
 	}
 }
