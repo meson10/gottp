@@ -2,7 +2,9 @@ package gottp
 
 import (
 	"gopkg.in/simversity/gotracer.v1"
+	"log"
 	"sync"
+	"time"
 )
 
 var worker func(chan bool)
@@ -46,17 +48,30 @@ func workerWrapper() {
 }
 
 func RunWorker(wk func(chan bool)) {
-	if wk != nil {
+	if worker != nil {
 		panic("Worker already running.")
 	}
 	worker = wk
 	go spawner()
 }
 
+func waitForWorker(compl chan<- bool) {
+	wg.Wait()
+	compl <- true
+}
+
 func StopWorker() {
-	if wk != nil {
+	if worker != nil {
+		waitChannel := make(chan bool)
+		go waitForWorker(waitChannel)
 		exitChan <- true
-		wg.Wait()
-		wk = nil
+
+		select {
+		case <-waitChannel:
+		case <-time.After(10 * time.Second):
+			log.Println("Timing out")
+
+		}
+		worker = nil
 	}
 }
