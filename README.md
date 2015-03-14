@@ -5,6 +5,7 @@ gottp
 
 Gottp is not a regular front-end server to do user-facing CSS powered websites. It was designed using backend servers in mind and offers a variety of features like:
 
+* Background Workers
 * Call Aggregation using Non-Blocking or Blocking Pipes. [1]
 * Optionally Listens on Unix Domain socket.
 * In-built error traceback emails.
@@ -352,7 +353,6 @@ Despite parallel execution they return the data in the same order as requested.
 
 To submit an Async PIPE request issue a POST call on /async-pipe (available by default)
 
-```
 
 Pipe Request Object
 -------------------
@@ -381,3 +381,29 @@ A sample traceback email looks like this:
 ![Sample Traceback](http://test.simversity.com.s3.amazonaws.com/original_image/142052802943405598970493/emailtraceback.png)
 
 TODO: Expose a way to use custom email templates.
+
+Background Workers
+==================
+
+Gottp now supports background workers. Background workers allow parallel background execution of long running processes.
+
+There are a few advantage of using gottp managed background worker over simply spawning a goroutine:
+
+ * Gottp Workers are autoamtically recovered and re-spawned in case of Panic. You also get a fancy error traceback provided you have configured the email tracebacks, discussed earlier.
+ * Gottp Workers do not quit abruptly when main thread receives an interrupt. This is beneficial to process cleanups and other vital exit routines.
+ * Gottp Workers are provided with a default timeout of 10 seconds and a worker that seems to be taking forever is then terminated.
+ * Gottp gracefully handles all process interrupts and signals the background worker accordingly.
+
+NOTE: At this moment, gottp only supports the option of one background worker.
+
+Usage:
+
+```go
+import "gopkg.in/simversity/gottp.v2"
+
+func main() {
+	gottp.RunWorker(func(exitChan bool) {
+		log.Println("Do some background work here");
+	})
+}
+```
