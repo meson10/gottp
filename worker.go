@@ -33,9 +33,9 @@ func workerWrapper() {
 	defer wg.Done()
 
 	// Trusing the fact that Tracer will always execute callback.
-	defer Tracer.Notify(func() string {
+	defer Tracer.Notify(func(reason string) string {
 		errChan <- true
-		return "Exception in worker"
+		return "Exception in worker: " + reason
 	})
 
 	worker(exitChan)

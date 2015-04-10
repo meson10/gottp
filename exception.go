@@ -27,8 +27,11 @@ type ErrorStack struct {
 	Arguments string
 }
 
-func getTracerExtra(req *Request) func() string {
-	return func() string {
+func getTracerExtra(req *Request) func(reason string) string {
+	return func(reason string) string {
+		e := HttpError{500, "Internal Server Error: " + reason}
+		req.Raise(e)
+
 		if req == nil {
 			return ""
 		}
