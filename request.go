@@ -3,6 +3,7 @@ package gottp
 import (
 	"compress/gzip"
 	"compress/zlib"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -155,6 +156,12 @@ func (r *Request) Finish(data interface{}) []byte {
 	r.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	r.Writer.Header().Set("Content-Type", "application/json")
 	return utils.Encoder(data)
+}
+
+func (r *Request) Redirect(url string, status int) {
+	log.Println("Redirecting to", url)
+	http.Redirect(r.Writer, r.Request, url, status)
+	return
 }
 
 func (r *Request) Write(data interface{}) {
