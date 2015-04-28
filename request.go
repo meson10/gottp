@@ -39,6 +39,9 @@ func makeInt(val interface{}, fallback int) int {
 		if err == nil {
 			return ret
 		}
+		log.Println(err)
+	case float64:
+		return int(val.(float64))
 	}
 	return fallback
 }
@@ -78,7 +81,7 @@ func (r *Request) GetPaginator() *Paginator {
 	for key, value := range *qp {
 		switch key {
 		case "skip":
-			p.Skip = makeInt(value, PAGE_SIZE)
+			p.Skip = makeInt(value, SKIP)
 		case "limit":
 			p.Limit = makeInt(value, PAGE_SIZE)
 		case "wlt":
