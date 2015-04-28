@@ -39,7 +39,6 @@ func makeInt(val interface{}, fallback int) int {
 		if err == nil {
 			return ret
 		}
-		log.Println(err)
 	case float64:
 		return int(val.(float64))
 	}
