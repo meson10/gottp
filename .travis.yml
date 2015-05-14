@@ -10,3 +10,8 @@ before_install:
 
 script:
   - go build -v ./...
+
+notifications:
+  email:
+    - piyush@piyushverma.net
+    - desaiparth08@gmail.com
