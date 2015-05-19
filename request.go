@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/simversity/gottp.v2/utils"
+	"gopkg.in/simversity/gottp.v3/utils"
 )
 
 //*http.Request, rw ResponseWriter

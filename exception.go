@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"html/template"
 
-	utils "gopkg.in/simversity/gottp.v2/utils"
+	utils "gopkg.in/simversity/gottp.v3/utils"
 )
 
 const errorExtra = `

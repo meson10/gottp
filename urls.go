@@ -40,7 +40,6 @@ func (u Url) MakeUrlArgs(url *string) (*map[string]string, bool) {
 				data[key] = matches[ix]
 			}
 		}
-		err = false
 	} else if len(named_groups) > 0 {
 		err = true
 	}

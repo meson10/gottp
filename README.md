@@ -22,7 +22,7 @@ Installation
 Installation is as easy as:
 
 ```
-go get gopkg.in/simversity/gottp.v2
+go get gopkg.in/simversity/gottp.v3
 ```
 
 Getting Started
@@ -60,7 +60,7 @@ A minimalist extended configuration looks like:
 
 ```
 import (
-        "gopkg.in/simversity/gottp.v2/conf"
+        "gopkg.in/simversity/gottp.v3/conf"
        )
 
 type config struct {
@@ -93,7 +93,7 @@ A sample urls.go looks like:
 package main
 
 import (
-        "gopkg.in/simversity/gottp.v2"
+        "gopkg.in/simversity/gottp.v3"
        )
 
 func init(){
@@ -113,7 +113,7 @@ A sample handler looks like:
 package handlers
 
 import (
-        "gopkg.in/simversity/gottp.v2"
+        "gopkg.in/simversity/gottp.v3"
        )
 
 type HelloMessage struct {
@@ -135,7 +135,7 @@ package main
 
 import (
     "log"
-    "gopkg.in/simversity/gottp.v2"
+    "gopkg.in/simversity/gottp.v3"
 )
 
 func main() {
@@ -399,7 +399,7 @@ NOTE: At this moment, gottp only supports the option of one background worker.
 Usage:
 
 ```go
-import "gopkg.in/simversity/gottp.v2"
+import "gopkg.in/simversity/gottp.v3"
 
 func main() {
 	gottp.RunWorker(func(exitChan bool) {
