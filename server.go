@@ -107,8 +107,6 @@ func DefaultServer() {
 }
 
 func makeServer() {
-	bindHandlers()
-
 	addr := settings.Gottp.Listen
 
 	SysInitChan <- true

@@ -1,20 +1,18 @@
 package gottp
 
-import (
-	"net/http"
-	"time"
-)
-
-func UrlHandler(w http.ResponseWriter, req *http.Request) {
-	performUrls(w, req)
-	return
+type UrlHandler struct {
+	BaseHandler
 }
 
-func performUrls(w http.ResponseWriter, req *http.Request) {
-	defer timeTrack(time.Now(), req)
+var allUrlsMap = map[string]string{}
 
-	p := Request{Writer: w, Request: req, UrlArgs: nil}
-	defer Tracer.Notify(getTracerExtra(&p))
-	performRequest(new(allUrls), &p)
+func (self *UrlHandler) Get(req *Request) {
+	if len(allUrlsMap) == 0 {
+		for _, url := range boundUrls {
+			allUrlsMap[url.name] = url.url
+		}
+	}
+
+	req.Write(allUrlsMap)
 	return
 }

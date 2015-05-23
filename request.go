@@ -15,6 +15,9 @@ import (
 
 const PAGE_SIZE = 30
 const SKIP = 0
+const serverUA = "Gottp Server"
+const ERROR = `Oops! An Internal Error occured while performing that action.
+Please try again later`
 
 type WireSender interface {
 	SendOverWire() utils.Q
@@ -207,4 +210,27 @@ func (r *Request) Write(data interface{}) {
 
 func (r *Request) Raise(e HttpError) {
 	r.Write(e)
+}
+
+func performRequest(handler Handler, p *Request) {
+	method := (*p).Request.Method
+
+	switch method {
+	case "GET":
+		handler.Get(p)
+	case "POST":
+		handler.Post(p)
+	case "PUT":
+		handler.Put(p)
+	case "DELETE":
+		handler.Delete(p)
+	case "HEAD":
+		handler.Head(p)
+	case "OPTIONS":
+		handler.Options(p)
+	case "PATCH":
+		handler.Patch(p)
+	default:
+		log.Println("Unsupported method", method)
+	}
 }
