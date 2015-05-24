@@ -6,7 +6,10 @@ func TestRoot(t *testing.T) {
 	server := NewServer()
 	defer server.Close()
 
-	server.Test("/", "get", func(msg *MockResponse) {
+	req := MockRequest{}
+	req.Url = "/"
+
+	server.Test(&req, func(msg *MockResponse) {
 		expected := 404
 
 		if msg.Status != expected {

@@ -6,7 +6,10 @@ func Test404(t *testing.T) {
 	server := NewServer()
 	defer server.Close()
 
-	server.Test("/urlsd", "get", func(msg *MockResponse) {
+	req := MockRequest{}
+	req.Url = "/urlsd"
+
+	server.Test(&req, func(msg *MockResponse) {
 		expected := 404
 
 		if msg.Status != expected {
