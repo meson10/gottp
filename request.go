@@ -234,3 +234,21 @@ func performRequest(handler Handler, p *Request) {
 		log.Println("Unsupported method", method)
 	}
 }
+
+func doRequest(request *Request, availableUrls *[]*Url) {
+	requestUrl := request.Request.URL.Path
+	defer Tracer.Notify(getTracerExtra(request))
+
+	for _, url := range *availableUrls {
+		urlArgs, err := url.MakeUrlArgs(&requestUrl)
+		if !err {
+			request.UrlArgs = urlArgs
+			performRequest(url.handler, request)
+			return
+		}
+	}
+
+	e := HttpError{404, requestUrl + " not Found"}
+	request.Raise(e)
+	return
+}

@@ -2,7 +2,6 @@ package gottp
 
 import (
 	"bytes"
-	"log"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,31 +12,14 @@ import (
 
 type eachCall struct {
 	Host   string
-	Method string                 `method`
-	Url    string                 `url`
-	Data   map[string]interface{} `data`
+	Method string  `method`
+	Url    string  `url`
+	Data   utils.Q `data`
 }
 
-func eachPipe(req *Request, call eachCall) {
-	for _, url := range boundUrls {
-		urlArgs, err := url.MakeUrlArgs(&call.Url)
-		if err {
-			continue
-		}
-
-		pipeData := bytes.NewBuffer(utils.Encoder(call.Data))
-		pipeReq, err2 := http.NewRequest(call.Method, call.Url, pipeData)
-
-		if err2 != nil {
-			log.Println(err)
-		} else {
-			pipeReq.Host = call.Host
-			req.Request = pipeReq
-			req.UrlArgs = urlArgs
-			performRequest(url.handler, req)
-		}
-		break
-	}
+func eachPipe(request *Request) {
+	doRequest(request, &boundUrls)
+	return
 }
 
 func performPipe(parentReq *Request, async bool) {
@@ -79,21 +61,32 @@ func performPipe(parentReq *Request, async bool) {
 	for index, oneCall := range calls {
 		oneCall.Host = req.Host
 		pipeUrls = append(pipeUrls, oneCall.Url)
-		pipeReq := Request{pipeOutput: po, pipeIndex: index}
+
+		pipeData := bytes.NewBuffer(utils.Encoder(oneCall.Data))
+		pipeHttpRequest, err := http.NewRequest(oneCall.Method, oneCall.Url, pipeData)
+		if err != nil {
+			e := HttpError{500, oneCall.Url + " had error"}
+			parentReq.Raise(e)
+			return
+		}
+
+		pipeReq := Request{
+			Request:    pipeHttpRequest,
+			pipeOutput: po,
+			pipeIndex:  index,
+		}
 
 		wg.Add(1)
 
 		if async {
 			go func(call eachCall) {
-				defer Tracer.Notify(getTracerExtra(&pipeReq))
 				defer wg.Done()
-				eachPipe(&pipeReq, call)
+				eachPipe(&pipeReq)
 			}(oneCall)
 		} else {
 			func(call eachCall) {
-				defer Tracer.Notify(getTracerExtra(&pipeReq))
 				defer wg.Done()
-				eachPipe(&pipeReq, call)
+				eachPipe(&pipeReq)
 			}(oneCall)
 		}
 	}
