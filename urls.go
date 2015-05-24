@@ -57,7 +57,7 @@ func bindGlobalHandler() {
 
 func bindHandlers() {
 	NewUrl("async_pipe", "^/async_pipe/?$", new(AsyncPipeHandler))
-	NewUrl("async_pipe", "^/async_pipe/?$", new(PipeHandler))
+	NewUrl("pipe", "^/pipe/?$", new(PipeHandler))
 	NewUrl("urls", "^/urls/?$", new(UrlHandler))
 }
 
