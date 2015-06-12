@@ -9,6 +9,7 @@ before_install:
   - cd $HOME/gopath/src/gopkg.in/simversity/gottp.v2
 
 script:
+  - go test -v ./...
   - go build -v ./...
 
 notifications:

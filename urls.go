@@ -1,6 +1,10 @@
 package gottp
 
-import "regexp"
+import (
+	"log"
+	"net/http"
+	"regexp"
+)
 
 type Url struct {
 	name    string
@@ -40,10 +44,25 @@ func (u Url) MakeUrlArgs(url *string) (*map[string]string, bool) {
 				data[key] = matches[ix]
 			}
 		}
-		err = false
 	} else if len(named_groups) > 0 {
 		err = true
 	}
 
 	return &data, err
+}
+
+func bindGlobalHandler() {
+	http.HandleFunc("/", GlobalHandler)
+}
+
+func bindHandlers() {
+	NewUrl("async_pipe", "^/async_pipe/?$", new(AsyncPipeHandler))
+	NewUrl("pipe", "^/pipe/?$", new(PipeHandler))
+	NewUrl("urls", "^/urls/?$", new(UrlHandler))
+}
+
+func init() {
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
+	bindGlobalHandler()
+	bindHandlers()
 }

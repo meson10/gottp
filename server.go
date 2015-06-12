@@ -12,7 +12,7 @@ import (
 	"syscall"
 
 	traceback "gopkg.in/simversity/gotracer.v1"
-	conf "gopkg.in/simversity/gottp.v2/conf"
+	conf "gopkg.in/simversity/gottp.v3/conf"
 )
 
 func cleanAddr(addr string) {
@@ -107,8 +107,6 @@ func DefaultServer() {
 }
 
 func makeServer() {
-	bindHandlers()
-
 	addr := settings.Gottp.Listen
 
 	SysInitChan <- true
