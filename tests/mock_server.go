@@ -2,8 +2,8 @@ package tests
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -16,6 +16,7 @@ type MockResponse struct {
 	Status  int         `json:"status"`
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
+	Error   error
 }
 
 type MockServer struct {
@@ -33,6 +34,8 @@ func (self *MockServer) Close() {
 }
 
 func (self *MockServer) Test(request *MockRequest, equality func(response *MockResponse)) {
+	var msg = new(MockResponse)
+
 	if request.Method == "" {
 		request.Method = "GET"
 	}
@@ -44,22 +47,38 @@ func (self *MockServer) Test(request *MockRequest, equality func(response *MockR
 	)
 
 	if err != nil {
-		log.Panic(err)
+		msg.Error = err
+		equality(msg)
+		return
 	}
 
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := http.DefaultClient.Do(req)
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return errors.New(req.URL.String())
+		},
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		msg.Error = err
+		msg.Message = err.Error()
+		equality(msg)
+		return
+	}
+
 	data, err := ioutil.ReadAll(resp.Body)
 	resp.Body.Close()
 	if err != nil {
-		log.Panic(err)
+		msg.Error = err
+		equality(msg)
+		return
 	}
 
-	var msg = new(MockResponse)
 	utils.Decoder(data, msg)
-
 	equality(msg)
+	return
 }
 
 func NewServer() *MockServer {
