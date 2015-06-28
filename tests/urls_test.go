@@ -6,9 +6,6 @@ import (
 	"gopkg.in/simversity/gottp.v3/utils"
 )
 
-type urlResponse struct {
-}
-
 func TestUrls(t *testing.T) {
 	server := NewServer()
 	defer server.Close()
