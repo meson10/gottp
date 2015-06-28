@@ -68,11 +68,10 @@ type Request struct {
 	params     *utils.Q
 }
 
-func (r *Request) makeUrlArgs() {
-	original := *r.params
+func (r *Request) makeUrlArgs(params utils.Q) {
 	if r.UrlArgs != nil {
 		for key, value := range *r.UrlArgs {
-			original[key] = value
+			params[key] = value
 		}
 	}
 }
@@ -110,32 +109,32 @@ func (r *Request) GetPaginator() *Paginator {
 	return &p
 }
 
-func (r *Request) makeUrlParams() {
-	original := *r.params
+func (r *Request) makeUrlParams(params utils.Q) {
 	r.Request.ParseForm()
 	for key, value := range r.Request.Form {
 		length := len(value)
 		if length == 1 {
-			original[key] = value[0]
+			params[key] = value[0]
 		} else {
-			original[key] = value
+			params[key] = value
 		}
 	}
 }
 
-func (r *Request) makeBodyParams() {
+func (r *Request) makeBodyParams(params utils.Q) {
 	//if (r.Request.Method == "PUT" || r.Request.Method == "POST") {
 	if r.Request.ContentLength != 0 {
-		utils.DecodeStream(r.Request.Body, r.params)
+		utils.DecodeStream(r.Request.Body, &params)
 	}
 }
 
 func (r *Request) GetArguments() *utils.Q {
 	if r.params == nil {
-		r.params = &utils.Q{}
-		r.makeUrlArgs()
-		r.makeBodyParams()
-		r.makeUrlParams()
+		params := utils.Q{}
+		r.makeUrlArgs(params)
+		r.makeBodyParams(params)
+		r.makeUrlParams(params)
+		r.params = &params
 	}
 
 	return r.params
@@ -248,7 +247,7 @@ func doRequest(request *Request, availableUrls *[]*Url) {
 		}
 	}
 
-	e := HttpError{404, requestUrl + " not Found"}
+	e := HttpError{404, requestUrl + " did not match any exposed urls."}
 	request.Raise(e)
 	return
 }
