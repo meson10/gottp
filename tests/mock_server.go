@@ -56,12 +56,18 @@ func (self *MockServer) Test(request *MockRequest, equality func(response *MockR
 
 	client := &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			return errors.New(req.URL.String())
+			return errors.New("Redirecting =>" + req.URL.String())
 		},
 	}
 
 	resp, err := client.Do(req)
 	if err != nil {
+		status := 0
+		if strings.Contains(err.Error(), "Redirecting =>") {
+			status = 301
+		}
+
+		msg.Status = status
 		msg.Error = err
 		msg.Message = err.Error()
 		equality(msg)
