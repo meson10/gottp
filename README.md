@@ -21,7 +21,7 @@ Installation
 
 Installation is as easy as:
 
-```
+```go
 go get gopkg.in/simversity/gottp.v3
 ```
 
@@ -49,7 +49,7 @@ Configurer requires two method Sets:
 * MakeConfig(string) which accepts the path of the .cfg file provided as an command line argument.
 * GetGottpConfig() which must return the Settings
 
-```
+```go
 type Configurer interface {
     MakeConfig(string)
         GetGottpConfig() *GottpSettings
@@ -58,10 +58,8 @@ type Configurer interface {
 
 A minimalist extended configuration looks like:
 
-```
-import (
-        "gopkg.in/simversity/gottp.v3/conf"
-       )
+```go
+import "gopkg.in/simversity/gottp.v3/conf"
 
 type config struct {
     Custom struct {
@@ -89,12 +87,10 @@ urls.go
 
 A sample urls.go looks like:
 
-```
+```go
 package main
 
-import (
-        "gopkg.in/simversity/gottp.v3"
-       )
+import "gopkg.in/simversity/gottp.v3"
 
 func init(){
     gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", new(handlers.HelloMessage)),
@@ -109,12 +105,10 @@ handlers.go
 
 A sample handler looks like:
 
-```
+```go
 package handlers
 
-import (
-        "gopkg.in/simversity/gottp.v3"
-       )
+import "gopkg.in/simversity/gottp.v3"
 
 type HelloMessage struct {
   gottp.BaseHandler
@@ -130,7 +124,7 @@ main.go
 
 A sample main.go looks like:
 
-```
+```go
 package main
 
 import (
@@ -147,7 +141,7 @@ func main() {
 Build & Run
 -----------
 
-```
+```go
 go install test && test
 ```
 
@@ -155,7 +149,7 @@ Point your browser to http://127.0.0.1:8005/hello/check
 
 Should give you a JSON output:
 
-```
+```json
 {
     "data": "hello world",
         "message": "",
@@ -170,7 +164,7 @@ Gottp allows you to provide .cfg files via the command line which is as easy as 
 
 Default gottp settings is a struct called GottpSettings
 
-```
+```go
 type GottpSettings struct {
     EmailHost     string //SMTP Host to send server Tracebacks.
         EmailPort     string //SMTP Port
@@ -211,7 +205,7 @@ URLs
 
 Urls are of type gottp.Url
 
-```
+```go
 type Url struct {
     name    string //shortname of the url
     url     string //provided regular pattern
@@ -228,7 +222,7 @@ Request Handler
 
 A request handler must implement the Handler Interface which must expose the following methods
 
-```
+```go
 type Handler interface {
 	Get(request *Request)
 	Put(request *Request)
@@ -243,7 +237,7 @@ type Handler interface {
 
 gottp.BaseHandler has most common HTTP requests as method sets. So, If a struct uses BaseHandler as an embedded type it is sufficient to qualify as a Handler. To expose a new HTTP method for a URL type, implement the HTTP method set in the handler struct. See the Example below:
 
-```
+```go
 type helloMessage struct {
 	gottp.BaseHandler
 }
@@ -263,34 +257,33 @@ Request
 -------
 
 Request exposes a few method structs:
-
+```go
 GetArguments() *utils.Q
-
+```
 _
 Returns a map of all arguments passed to the request. This includes Body arguments in case of a PUT/POST request, url GET arguments and named arguments captured in URL regular expression. You can call this over as it handles caching internally.
 _
-
+```go
 GetArgument(key string) interface{}
-
 ConvertArguments(dest interface{})
 ConvertArgument(key string, dest interface{})
-
+```
 These methods come quite handy when you have to deal with the arguments. For a request with GET arguments that look like:
 
-```
+```go
 ?abc=world&param=1&check=0
 ```
 
 You can either fetch individual arguments like:
 
-```
+```go
 abcVar, _ := req.GetArgument("abc").(string)
 log.Println(abcVar)
 ```
 
 Or initialize a struct to convert all the arguments:
 
-```
+```go
 type params struct {
   abc string
   param int
@@ -311,7 +304,7 @@ This helps in preventing hard coding of endpoints where consumers can fetch the 
 
 Sample Output:
 
-```
+```json
 {
   "data": {
     "hello": "/hello/\\w{3,5}/?$"
@@ -360,7 +353,7 @@ Pipe Request Object
 Requests submitted as PIPEs should again be a valid JSON dump of
 
 
-```
+```json
 {
     "stack": [
         {"url": "/url1", "method": "POST", "data": {"sample": "json"}},
