@@ -63,6 +63,8 @@ func interrupt_cleanup(addr string) {
 	os.Exit(0)
 }
 
+// parserCLL Pasres commandline arguments if any.
+// Example: use -UNIX_SOCKET="127.0.0.1:8000" to change bind address
 func parseCLI() {
 	cfgPath, unixAddr := conf.CliArgs()
 	settings.MakeConfig(cfgPath)
@@ -72,6 +74,7 @@ func parseCLI() {
 	}
 }
 
+// MakeConfig take a Configurer and populates the settings in conf.Config
 func MakeConfig(cfg conf.Configurer) {
 	cfgPath, unixAddr := conf.CliArgs()
 	cfg.MakeConfig(cfgPath)
@@ -96,6 +99,7 @@ func MakeExcpetionListener(settings *conf.Config) {
 	}
 }
 
+// MakeServer takes a Configurer, and populates appropriate data structures
 func MakeServer(cfg conf.Configurer) {
 	MakeConfig(cfg)
 	MakeExcpetionListener(&settings)
@@ -103,11 +107,14 @@ func MakeServer(cfg conf.Configurer) {
 	makeServer()
 }
 
+// DefaultServer makes a server with default configuration,
+// overriding commandline arguments
 func DefaultServer() {
 	parseCLI()
 	makeServer()
 }
 
+// makeServer spawns server accoding to the configuration.
 func makeServer() {
 	addr := settings.Gottp.Listen
 

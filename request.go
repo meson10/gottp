@@ -59,6 +59,8 @@ func makeString(val interface{}) (ret string) {
 	return
 }
 
+// Request type is a gottp wrapper of the incoming request and its 
+// response. It has data structures for url arguments or parameters.
 type Request struct {
 	Request    *http.Request
 	Writer     http.ResponseWriter
@@ -68,6 +70,7 @@ type Request struct {
 	params     *utils.Q
 }
 
+// makeUrlArgs returns map of url arguments.
 func (r *Request) makeUrlArgs(params utils.Q) {
 	if r.UrlArgs != nil {
 		for key, value := range *r.UrlArgs {
@@ -76,6 +79,8 @@ func (r *Request) makeUrlArgs(params utils.Q) {
 	}
 }
 
+// GetPaginator returns pointer to Paginator type with appropriate values 
+// assigned.
 func (r *Request) GetPaginator() *Paginator {
 	p := Paginator{Limit: -1}
 	qp := r.GetArguments()
@@ -109,6 +114,7 @@ func (r *Request) GetPaginator() *Paginator {
 	return &p
 }
 
+// makeUrlParams returns map of url parameters.
 func (r *Request) makeUrlParams(params utils.Q) {
 	r.Request.ParseForm()
 	for key, value := range r.Request.Form {
@@ -121,6 +127,7 @@ func (r *Request) makeUrlParams(params utils.Q) {
 	}
 }
 
+// makeBodyParams returns map of body parameters.
 func (r *Request) makeBodyParams(params utils.Q) {
 	//if (r.Request.Method == "PUT" || r.Request.Method == "POST") {
 	if r.Request.ContentLength != 0 {
@@ -128,6 +135,8 @@ func (r *Request) makeBodyParams(params utils.Q) {
 	}
 }
 
+// GetArguments returns pointer to request's param which
+// is a map of all the parameters/arguments in the url/body.
 func (r *Request) GetArguments() *utils.Q {
 	if r.params == nil {
 		params := utils.Q{}
@@ -140,21 +149,27 @@ func (r *Request) GetArguments() *utils.Q {
 	return r.params
 }
 
+// ConvertArguments converts the request arguments to correspondig golang data structures
+// and stores it into f.
 func (r *Request) ConvertArguments(f interface{}) {
 	utils.Convert(r.GetArguments(), f)
 }
 
+// GetArgument returns the argument value matching the key.
 func (r *Request) GetArgument(key string) interface{} {
 	args := *r.GetArguments()
 	return args[key]
 }
 
+// ConvertArgument converts the value of argument matching key to correspondig golang data
+// structures and stores it into f.
 func (r *Request) ConvertArgument(key string, f interface{}) {
 	args := *r.GetArguments()
 	val := args[key]
 	utils.Convert(val, f)
 }
 
+// Finish adds three headers, and returns the corresponding JSON of data.
 func (r *Request) Finish(data interface{}) []byte {
 	r.Writer.Header().Set("Server", serverUA)
 	r.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -162,12 +177,14 @@ func (r *Request) Finish(data interface{}) []byte {
 	return utils.Encoder(data)
 }
 
+// Redirect redirects the user to given url.
 func (r *Request) Redirect(url string, status int) {
 	log.Println("Redirecting to", url)
 	http.Redirect(r.Writer, r.Request, url, status)
 	return
 }
 
+// Write writes and finishes the request with apporpiate response.
 func (r *Request) Write(data interface{}) {
 	var piped utils.Q
 
@@ -177,6 +194,8 @@ func (r *Request) Write(data interface{}) {
 		piped = utils.Q{
 			"data":    data,
 			"status":  http.StatusOK,
+			// why is there a need for message field in 
+			// the response when theres no way to change it?
 			"message": "",
 		}
 	}
@@ -207,10 +226,13 @@ func (r *Request) Write(data interface{}) {
 	}
 }
 
+// Raise sends HttpError as response 
 func (r *Request) Raise(e HttpError) {
 	r.Write(e)
 }
 
+// performRequest takes a handler and a pointer to request and 
+// calls the appropriate handler defined by the user.
 func performRequest(handler Handler, p *Request) {
 	method := (*p).Request.Method
 

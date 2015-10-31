@@ -6,6 +6,8 @@ import (
 	"regexp"
 )
 
+// Url type is a basic type for all urls exposed by the api.
+// It has name, url string a handler function, and a compiled regex pattern.
 type Url struct {
 	name    string
 	url     string
@@ -15,6 +17,8 @@ type Url struct {
 
 var boundUrls = []*Url{}
 
+// NewUrl creates a resourse of type Url and appends it to boundsUrl,
+// for comparing when a new request arrives.
 func NewUrl(name string, pattern string, handler Handler) {
 	compiled_pattern, err := regexp.Compile(pattern)
 	if err != nil {
