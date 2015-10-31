@@ -15,14 +15,22 @@ import (
 	conf "gopkg.in/simversity/gottp.v3/conf"
 )
 
+var (
+	SysInitChan = make(chan bool, 1)
+	Tracer      traceback.Tracer
+)
+
+var (
+	settings     conf.Config
+	cleanupFuncs = []func(){}
+)
+
 func cleanAddr(addr string) {
 	err := os.Remove(addr)
 	if err != nil {
 		log.Panic(err)
 	}
 }
-
-var cleanupFuncs = []func(){}
 
 func OnSysExit(cleanup func()) {
 	cleanupFuncs = append(cleanupFuncs, cleanup)
@@ -54,12 +62,6 @@ func interrupt_cleanup(addr string) {
 
 	os.Exit(0)
 }
-
-var SysInitChan = make(chan bool, 1)
-
-var settings conf.Config
-
-var Tracer traceback.Tracer
 
 func parseCLI() {
 	cfgPath, unixAddr := conf.CliArgs()

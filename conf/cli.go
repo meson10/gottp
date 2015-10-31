@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+// CliArgs returns filepath and socket address, if either or both the
+// commandline arguments are called.
 func CliArgs() (string, string) {
 	var unixSocketptr = flag.String(
 		"UNIX_SOCKET",
