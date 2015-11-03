@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	traceback "gopkg.in/simversity/gotracer.v1"
 	conf "gopkg.in/simversity/gottp.v3/conf"
@@ -24,6 +25,11 @@ var (
 	settings     conf.Config
 	cleanupFuncs = []func(){}
 )
+
+// Address returns the address on which the server binds.
+func Address() string {
+	return settings.Gottp.Listen
+}
 
 func cleanAddr(addr string) {
 	err := os.Remove(addr)
@@ -117,6 +123,13 @@ func DefaultServer() {
 // makeServer spawns server accoding to the configuration.
 func makeServer() {
 	addr := settings.Gottp.Listen
+
+	go func() {
+		time.After(time.Second)
+		for _, url := range boundUrls {
+			methondImplemented(url)
+		}
+	}()
 
 	SysInitChan <- true
 

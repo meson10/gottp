@@ -264,7 +264,7 @@ func doRequest(request *Request, availableUrls *[]*Url) {
 		urlArgs, err := url.MakeUrlArgs(&requestUrl)
 		if !err {
 			request.UrlArgs = urlArgs
-			performRequest(url.handler, request)
+			performRequest(url, request)
 			return
 		}
 	}
