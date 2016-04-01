@@ -3,11 +3,6 @@ language: go
 go:
   - tip
 
-before_install:
-  - mkdir -p $HOME/gopath/src/gopkg.in/simversity
-  - mv $HOME/gopath/src/github.com/Simversity/gottp $HOME/gopath/src/gopkg.in/simversity/gottp.v2
-  - cd $HOME/gopath/src/gopkg.in/simversity/gottp.v2
-
 script:
   - go test -v ./...
   - go build -v ./...
