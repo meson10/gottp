@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Simversity/gottp.svg?branch=master)](https://travis-ci.org/Simversity/gottp)
+[![Build Status](https://travis-ci.org/meson10/gottp.svg?branch=master)](https://travis-ci.org/meson10/gottp)
 
 gottp
 =====
@@ -22,7 +22,7 @@ Installation
 Installation is as easy as:
 
 ```go
-go get gopkg.in/simversity/gottp.v3
+go get gopkg.in/meson10/gottp.v3
 ```
 
 Getting Started
@@ -59,7 +59,7 @@ type Configurer interface {
 A minimalist extended configuration looks like:
 
 ```go
-import "gopkg.in/simversity/gottp.v3/conf"
+import "gopkg.in/meson10/gottp.v3/conf"
 
 type config struct {
     Custom struct {
@@ -90,7 +90,7 @@ A sample urls.go looks like:
 ```go
 package main
 
-import "gopkg.in/simversity/gottp.v3"
+import "gopkg.in/meson10/gottp.v3"
 
 func init(){
     gottp.NewUrl("hello", "/hello/\\w{3,5}/?$", new(handlers.HelloMessage)),
@@ -108,7 +108,7 @@ A sample handler looks like:
 ```go
 package handlers
 
-import "gopkg.in/simversity/gottp.v3"
+import "gopkg.in/meson10/gottp.v3"
 
 type HelloMessage struct {
   gottp.BaseHandler
@@ -129,7 +129,7 @@ package main
 
 import (
     "log"
-    "gopkg.in/simversity/gottp.v3"
+    "gopkg.in/meson10/gottp.v3"
 )
 
 func main() {
@@ -392,7 +392,7 @@ NOTE: At this moment, gottp only supports the option of one background worker.
 Usage:
 
 ```go
-import "gopkg.in/simversity/gottp.v3"
+import "gopkg.in/meson10/gottp.v3"
 
 func main() {
 	gottp.RunWorker(func(exitChan bool) {
