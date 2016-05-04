@@ -4,17 +4,28 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
+// Url type is a basic type for all urls exposed by the api.
+// It has name, url string a handler function, and a compiled regex pattern.
 type Url struct {
-	name    string
-	url     string
-	handler Handler
-	pattern *regexp.Regexp
+	name string
+	url  string
+	Handler
+	pattern            *regexp.Regexp
+	methodsImplemented []string
 }
 
 var boundUrls = []*Url{}
 
+func (u *Url) Options(req *Request) {
+	req.Writer.Header().Set("Allow", strings.Join(u.methodsImplemented, ", "))
+	req.Write(u.methodsImplemented)
+}
+
+// NewUrl creates a resourse of type Url and appends it to boundsUrl,
+// for comparing when a new request arrives.
 func NewUrl(name string, pattern string, handler Handler) {
 	compiled_pattern, err := regexp.Compile(pattern)
 	if err != nil {
@@ -23,7 +34,7 @@ func NewUrl(name string, pattern string, handler Handler) {
 
 	url := Url{
 		name:    name,
-		handler: handler,
+		Handler: handler,
 		pattern: compiled_pattern,
 		url:     pattern,
 	}

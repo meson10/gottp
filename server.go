@@ -10,10 +10,26 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	traceback "gopkg.in/simversity/gotracer.v1"
 	conf "gopkg.in/simversity/gottp.v3/conf"
 )
+
+var (
+	SysInitChan = make(chan bool, 1)
+	Tracer      traceback.Tracer
+)
+
+var (
+	settings     conf.Config
+	cleanupFuncs = []func(){}
+)
+
+// Address returns the address on which the server binds.
+func Address() string {
+	return settings.Gottp.Listen
+}
 
 func cleanAddr(addr string) {
 	err := os.Remove(addr)
@@ -21,8 +37,6 @@ func cleanAddr(addr string) {
 		log.Panic(err)
 	}
 }
-
-var cleanupFuncs = []func(){}
 
 func OnSysExit(cleanup func()) {
 	cleanupFuncs = append(cleanupFuncs, cleanup)
@@ -55,12 +69,8 @@ func interrupt_cleanup(addr string) {
 	os.Exit(0)
 }
 
-var SysInitChan = make(chan bool, 1)
-
-var settings conf.Config
-
-var Tracer traceback.Tracer
-
+// parserCLL Pasres commandline arguments if any.
+// Example: use -UNIX_SOCKET="127.0.0.1:8000" to change bind address
 func parseCLI() {
 	cfgPath, unixAddr := conf.CliArgs()
 	settings.MakeConfig(cfgPath)
@@ -70,6 +80,7 @@ func parseCLI() {
 	}
 }
 
+// MakeConfig take a Configurer and populates the settings in conf.Config
 func MakeConfig(cfg conf.Configurer) {
 	cfgPath, unixAddr := conf.CliArgs()
 	cfg.MakeConfig(cfgPath)
@@ -94,6 +105,7 @@ func MakeExcpetionListener(settings *conf.Config) {
 	}
 }
 
+// MakeServer takes a Configurer, and populates appropriate data structures
 func MakeServer(cfg conf.Configurer) {
 	MakeConfig(cfg)
 	MakeExcpetionListener(&settings)
@@ -101,13 +113,23 @@ func MakeServer(cfg conf.Configurer) {
 	makeServer()
 }
 
+// DefaultServer makes a server with default configuration,
+// overriding commandline arguments
 func DefaultServer() {
 	parseCLI()
 	makeServer()
 }
 
+// makeServer spawns server accoding to the configuration.
 func makeServer() {
 	addr := settings.Gottp.Listen
+
+	go func() {
+		time.After(time.Second)
+		for _, url := range boundUrls {
+			methondImplemented(url)
+		}
+	}()
 
 	SysInitChan <- true
 
